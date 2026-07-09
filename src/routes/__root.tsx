@@ -83,6 +83,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Assista filmes e séries com capas oficiais e player integrado." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "BLUDVflix — Filmes e Séries Online" },
+      { name: "twitter:description", content: "Assista filmes e séries com capas oficiais e player integrado." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b0df6de1-596c-4c6d-ab49-011c1a652460/id-preview-d68d1599--45df965e-0f0b-4408-afe8-f7f39c8b77d4.lovable.app-1783574221892.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b0df6de1-596c-4c6d-ab49-011c1a652460/id-preview-d68d1599--45df965e-0f0b-4408-afe8-f7f39c8b77d4.lovable.app-1783574221892.png" },
     ],
     links: [
       {
