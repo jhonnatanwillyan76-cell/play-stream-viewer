@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BrowseTypeRouteImport } from './routes/browse.$type'
+import { Route as TitleTypeSlugRouteImport } from './routes/title.$type.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BrowseTypeRoute = BrowseTypeRouteImport.update({
+  id: '/browse/$type',
+  path: '/browse/$type',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TitleTypeSlugRoute = TitleTypeSlugRouteImport.update({
+  id: '/title/$type/$slug',
+  path: '/title/$type/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/browse/$type': typeof BrowseTypeRoute
+  '/title/$type/$slug': typeof TitleTypeSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/browse/$type': typeof BrowseTypeRoute
+  '/title/$type/$slug': typeof TitleTypeSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/browse/$type': typeof BrowseTypeRoute
+  '/title/$type/$slug': typeof TitleTypeSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/browse/$type' | '/title/$type/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/browse/$type' | '/title/$type/$slug'
+  id: '__root__' | '/' | '/browse/$type' | '/title/$type/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BrowseTypeRoute: typeof BrowseTypeRoute
+  TitleTypeSlugRoute: typeof TitleTypeSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/browse/$type': {
+      id: '/browse/$type'
+      path: '/browse/$type'
+      fullPath: '/browse/$type'
+      preLoaderRoute: typeof BrowseTypeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/title/$type/$slug': {
+      id: '/title/$type/$slug'
+      path: '/title/$type/$slug'
+      fullPath: '/title/$type/$slug'
+      preLoaderRoute: typeof TitleTypeSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BrowseTypeRoute: BrowseTypeRoute,
+  TitleTypeSlugRoute: TitleTypeSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
