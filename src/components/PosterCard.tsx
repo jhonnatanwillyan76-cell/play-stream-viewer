@@ -8,10 +8,10 @@ export function PosterCard({ item }: { item: CardItem }) {
       params={{ type: item.type, slug: item.slug }}
       className="group block card-hover hover:-translate-y-1"
     >
-      <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-secondary poster-shadow ring-1 ring-border">
+      <div className="relative aspect-video overflow-hidden rounded-xl bg-secondary poster-shadow ring-1 ring-border">
         {item.poster ? (
           <img
-            src={item.poster.replace("/w780/", "/w500/")}
+            src={item.poster}
             alt={item.title}
             loading="lazy"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
