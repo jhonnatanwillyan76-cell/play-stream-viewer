@@ -124,6 +124,42 @@ export const listHome = createServerFn({ method: "GET" }).handler(async () => {
   }
 });
 
+function parseSearchResults(html: string): CardItem[] {
+  const items: CardItem[] = [];
+  const re =
+    /<div class="result-item">[\s\S]*?<a href="(https:\/\/bludvplay\.online\/(filmes|series)\/([^"\/#]+)\/)">\s*<img[^>]*src="([^"]+)"[^>]*alt="([^"]*)"[\s\S]*?<span class="year">([^<]*)<\/span>/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html))) {
+    const type = m[2] as "filmes" | "series";
+    const slug = m[3];
+    // Upgrade tmdb poster size from w92 to w300 for sharper card
+    const poster = m[4].replace("/w92/", "/w300/");
+    items.push({
+      slug,
+      type,
+      title: decodeEntities(m[5] || slug),
+      year: m[6]?.trim() ?? "",
+      poster,
+    });
+  }
+  return items;
+}
+
+export const searchContent = createServerFn({ method: "GET" })
+  .inputValidator((d: { q: string }) => ({ q: d.q.slice(0, 100) }))
+  .handler(async ({ data }) => {
+    if (!data.q.trim()) return { items: [], q: data.q };
+    try {
+      const html = await fetchHtml(
+        `${BASE}/?s=${encodeURIComponent(data.q)}`,
+      );
+      return { items: parseSearchResults(html), q: data.q };
+    } catch (e) {
+      console.error("searchContent failed", e);
+      return { items: [], q: data.q };
+    }
+  });
+
 function parseDetail(html: string): Detail {
   const postId = /data-post=['"](\d+)['"]/.exec(html)?.[1] ?? "";
   const title =
