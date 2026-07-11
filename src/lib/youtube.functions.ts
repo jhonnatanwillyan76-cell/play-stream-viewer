@@ -20,23 +20,22 @@ async function checkLive(handle: string): Promise<LiveStream | null> {
     });
     if (!res.ok) return null;
     const html = await res.text();
-    // Reliable live marker: ytInitialPlayerResponse contains "isLive":true and hlsManifestUrl.
-    const playerBlock =
-      /ytInitialPlayerResponse\s*=\s*(\{[\s\S]*?\});\s*(?:var|<\/script>)/.exec(
+    // /@handle/live redirects to the channel page when nothing is live,
+    // so the presence of "isLive":true is the reliable signal. hlsManifestUrl
+    // is only injected client-side, so we don't require it.
+    if (!/"isLive"\s*:\s*true/.test(html)) return null;
+    const videoId =
+      /"videoDetails"\s*:\s*\{\s*"videoId"\s*:\s*"([^"]+)"/.exec(html)?.[1] ??
+      /<link rel="canonical" href="https:\/\/www\.youtube\.com\/watch\?v=([^"]+)"/.exec(
         html,
-      )?.[1] ?? "";
-    if (!playerBlock) return null;
-    const isLive = /"isLive"\s*:\s*true/.test(playerBlock);
-    const hasHls = /"hlsManifestUrl"\s*:\s*"/.test(playerBlock);
-    if (!isLive || !hasHls) return null;
-    const videoId = /"videoId"\s*:\s*"([^"]+)"/.exec(playerBlock)?.[1];
+      )?.[1];
     if (!videoId) return null;
     const title =
-      /"title"\s*:\s*\{\s*"simpleText"\s*:\s*"([^"]+)"/.exec(playerBlock)?.[1] ??
-      /"videoDetails"[\s\S]{0,500}?"title"\s*:\s*"([^"]+)"/.exec(playerBlock)?.[1] ??
+      /"videoDetails"[\s\S]{0,2000}?"title"\s*:\s*"([^"]+)"/.exec(html)?.[1] ??
+      /<meta name="title" content="([^"]+)"/.exec(html)?.[1] ??
       "";
     const channel =
-      /"author"\s*:\s*"([^"]+)"/.exec(playerBlock)?.[1] ?? handle;
+      /"author"\s*:\s*"([^"]+)"/.exec(html)?.[1] ?? handle;
     return {
       handle,
       videoId,
