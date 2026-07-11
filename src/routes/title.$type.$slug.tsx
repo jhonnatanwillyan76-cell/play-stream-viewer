@@ -21,12 +21,12 @@ export const Route = createFileRoute("/title/$type/$slug")({
   head: ({ loaderData }) => ({
     meta: loaderData
       ? [
-          { title: `${loaderData.title} — BLUDVflix` },
+          { title: `${loaderData.title} — Maré TV` },
           { name: "description", content: loaderData.description.slice(0, 160) },
           { property: "og:title", content: loaderData.title },
           { property: "og:image", content: loaderData.backdrop ?? loaderData.poster },
         ]
-      : [{ title: "Carregando… — BLUDVflix" }],
+      : [{ title: "Carregando… — Maré TV" }],
   }),
   component: TitlePage,
   pendingComponent: () => (

@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 export const Route = createFileRoute("/ao-vivo")({
   head: () => ({
     meta: [
-      { title: "Ao Vivo — BLUDVflix" },
+      { title: "Ao Vivo — Maré TV" },
       {
         name: "description",
         content: "Transmissões ao vivo em tempo real.",
