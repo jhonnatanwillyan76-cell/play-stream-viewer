@@ -7,7 +7,18 @@ export type LiveStream = {
   channel: string;
 };
 
-const HANDLES = ["CazeTV", "sbt"];
+const HANDLES = [
+  "CazeTV",
+  "sbt",
+  "PicaPau",
+  "PetVetLove",
+  "BoomerangUK",
+  "tvaparecida",
+  "REDEBRASILLIVE",
+  "euronewspt",
+  "rtvenoticias",
+  "recordnews",
+];
 
 async function checkLive(handle: string): Promise<LiveStream | null> {
   try {
