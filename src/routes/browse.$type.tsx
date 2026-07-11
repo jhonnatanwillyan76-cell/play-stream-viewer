@@ -27,7 +27,7 @@ export const Route = createFileRoute("/browse/$type")({
     meta: [
       {
         title:
-          (params.type === "filmes" ? "Filmes" : "Séries") + " — BLUDVflix",
+          (params.type === "filmes" ? "Filmes" : "Séries") + " — Maré TV",
       },
     ],
   }),

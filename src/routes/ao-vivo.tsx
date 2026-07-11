@@ -2,12 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getLiveStreams } from "@/lib/youtube.functions";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export const Route = createFileRoute("/ao-vivo")({
   head: () => ({
     meta: [
-      { title: "Ao Vivo — BLUDVflix" },
+      { title: "Ao Vivo — Maré TV" },
       {
         name: "description",
         content: "Transmissões ao vivo em tempo real.",
@@ -36,6 +36,16 @@ function LivePage() {
     }
   }, [streams, activeId]);
   const active = streams.find((s) => s.videoId === activeId) ?? streams[0];
+  const playerWrapRef = useRef<HTMLDivElement>(null);
+  const requestFs = () => {
+    const el = playerWrapRef.current;
+    if (!el) return;
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      el.requestFullscreen?.();
+    }
+  };
   return (
     <div className="min-h-screen">
       <SiteHeader />
@@ -83,16 +93,39 @@ function LivePage() {
                     {active.title || "Transmissão ao vivo"}
                   </h2>
                 </div>
-                <div className="relative w-full aspect-video overflow-hidden rounded-2xl bg-black ring-1 ring-border poster-shadow">
+                <div
+                  ref={playerWrapRef}
+                  className="group relative w-full aspect-video overflow-hidden rounded-2xl bg-black ring-1 ring-border poster-shadow"
+                >
                   <iframe
                     key={active.videoId}
-                    src={`https://www.youtube.com/embed/${active.videoId}?autoplay=1&rel=0&modestbranding=1`}
+                    src={`https://www.youtube.com/embed/${active.videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&fs=0&disablekb=1&controls=0`}
                     title={active.title || active.channel}
                     className="absolute inset-0 h-full w-full"
                     allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                     allowFullScreen
                     referrerPolicy="no-referrer-when-downgrade"
                   />
+                  {/* Bloqueia todos os cliques/redirecionamentos do YouTube */}
+                  <div
+                    className="absolute inset-0"
+                    style={{ pointerEvents: "auto" }}
+                    onClick={(e) => e.preventDefault()}
+                  />
+                  {/* Botão de tela cheia próprio */}
+                  <button
+                    type="button"
+                    onClick={requestFs}
+                    aria-label="Tela cheia"
+                    className="absolute bottom-3 right-3 z-10 rounded-md bg-black/60 hover:bg-black/80 text-white p-2 backdrop-blur transition opacity-0 group-hover:opacity-100 focus:opacity-100"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+                      <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+                      <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+                      <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+                    </svg>
+                  </button>
                 </div>
               </div>
             )}

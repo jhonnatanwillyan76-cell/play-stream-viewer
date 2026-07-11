@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { searchContent } from "@/lib/bludv.functions";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -23,8 +24,8 @@ export const Route = createFileRoute("/search")({
     meta: [
       {
         title: loaderData?.q
-          ? `Busca: ${loaderData.q} — BLUDVflix`
-          : "Buscar — BLUDVflix",
+          ? `Busca: ${loaderData.q} — Maré TV`
+          : "Buscar — Maré TV",
       },
     ],
   }),
@@ -34,6 +35,9 @@ export const Route = createFileRoute("/search")({
 function SearchPage() {
   const { q } = Route.useSearch();
   const { data } = useSuspenseQuery(searchQuery(q));
+  const navigate = useNavigate();
+  const [term, setTerm] = useState(q);
+  useEffect(() => setTerm(q), [q]);
 
   return (
     <div className="min-h-screen">
@@ -45,9 +49,34 @@ function SearchPage() {
         <h1 className="text-3xl sm:text-4xl font-black tracking-tight mt-1">
           {q ? `Resultados para "${q}"` : "Digite algo para buscar"}
         </h1>
-        <p className="text-sm text-muted-foreground mt-2">
-          {data.items.length} resultado(s)
-        </p>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const t = term.trim();
+            navigate({ to: "/search", search: { q: t } });
+          }}
+          className="mt-6 flex gap-2 max-w-2xl"
+        >
+          <input
+            type="search"
+            autoFocus
+            value={term}
+            onChange={(e) => setTerm(e.target.value)}
+            placeholder="Buscar filmes ou séries…"
+            className="flex-1 rounded-full bg-secondary/70 border border-border px-5 py-3 text-base outline-none focus:ring-2 focus:ring-primary/60"
+          />
+          <button
+            type="submit"
+            className="rounded-full bg-primary text-primary-foreground font-bold px-6 py-3 text-sm uppercase tracking-wider hover:opacity-90 transition"
+          >
+            Buscar
+          </button>
+        </form>
+        {q && (
+          <p className="text-sm text-muted-foreground mt-4">
+            {data.items.length} resultado(s)
+          </p>
+        )}
 
         {data.items.length === 0 ? (
           <div className="py-20 text-center text-muted-foreground">
