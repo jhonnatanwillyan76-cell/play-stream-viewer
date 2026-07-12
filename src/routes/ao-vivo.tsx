@@ -107,11 +107,13 @@ function LivePage() {
                     referrerPolicy="no-referrer-when-downgrade"
                   />
                   {/* Bloqueia todos os cliques/redirecionamentos do YouTube */}
-                  <div
-                    className="absolute inset-0"
-                    style={{ pointerEvents: "auto" }}
-                    onClick={(e) => e.preventDefault()}
-                  />
+                  {active.handle.toLowerCase() !== "cazetv" && (
+                    <div
+                      className="absolute inset-0"
+                      style={{ pointerEvents: "auto" }}
+                      onClick={(e) => e.preventDefault()}
+                    />
+                  )}
                   {/* Botão de tela cheia próprio */}
                   <button
                     type="button"
