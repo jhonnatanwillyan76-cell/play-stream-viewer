@@ -32,8 +32,12 @@ export function PosterCard({ item }: { item: CardItem }) {
         </span>
       </div>
       <div className="mt-2 px-0.5">
-        <h3 className="text-sm font-semibold line-clamp-1">{item.title}</h3>
-        <p className="text-xs text-muted-foreground">{item.year}</p>
+        <h3 className="title-cinematic text-lg sm:text-xl text-foreground line-clamp-2">
+          {item.title}
+        </h3>
+        <p className="text-[11px] uppercase tracking-widest text-muted-foreground mt-1">
+          {item.year}
+        </p>
       </div>
     </Link>
   );
