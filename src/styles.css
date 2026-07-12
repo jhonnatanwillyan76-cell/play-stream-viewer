@@ -159,3 +159,12 @@
 @utility poster-shadow {
   box-shadow: 0 10px 30px -12px oklch(0 0 0 / 0.6);
 }
+
+@utility title-cinematic {
+  font-family: "Anton", "Bebas Neue", "Cinzel", ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 2px 12px oklch(0 0 0 / 0.55), 0 0 1px oklch(0 0 0 / 0.8);
+}

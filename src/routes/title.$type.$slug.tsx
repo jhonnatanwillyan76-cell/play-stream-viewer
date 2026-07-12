@@ -81,7 +81,7 @@ function TitlePage() {
             <p className="text-xs uppercase tracking-[0.25em] text-primary font-bold">
               {t === "filmes" ? "Filme" : t === "series" ? "Série" : "Episódio"}
             </p>
-            <h1 className="text-3xl sm:text-5xl font-black tracking-tight mt-2">
+            <h1 className="title-cinematic text-4xl sm:text-6xl mt-3">
               {data.title}
             </h1>
             {data.year ? (
