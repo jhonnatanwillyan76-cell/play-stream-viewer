@@ -34,8 +34,8 @@ export const Route = createFileRoute("/search")({
   head: ({ loaderData }) => ({
     meta: [
       {
-        title: loaderData?.q
-          ? `Busca: ${loaderData.q} — Maré TV`
+        title: loaderData?.[0]?.q
+          ? `Busca: ${loaderData[0].q} — Maré TV`
           : "Buscar — Maré TV",
       },
     ],
