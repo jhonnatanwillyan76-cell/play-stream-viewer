@@ -158,7 +158,6 @@ function SearchPage() {
             </div>
           </section>
         ) : null}
-        )}
       </main>
     </div>
   );
