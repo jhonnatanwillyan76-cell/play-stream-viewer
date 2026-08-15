@@ -3,6 +3,10 @@ import { createFileRoute } from '@tanstack/react-router'
 const ALLOWED_HOSTS = ['ph2.lat']
 
 async function proxy(request: Request, method: 'GET' | 'HEAD') {
+  console.log(`[PROXY] Request: ${method} ${request.url}`);
+  const rangeHeader = request.headers.get('range');
+  if (rangeHeader) console.log(`[PROXY] Range requested: ${rangeHeader}`);
+
   const url = new URL(request.url)
   const target = url.searchParams.get('url')
   if (!target) return new Response('Missing url', { status: 400 })
@@ -62,20 +66,29 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
     outHeaders.set('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges')
     
     // Explicitly set content-type if missing or incorrect for common formats
-    if (parsed.pathname.endsWith('.ts')) {
-      outHeaders.set('content-type', 'video/mp2t')
-    } else if (parsed.pathname.endsWith('.mp4')) {
-      outHeaders.set('content-type', 'video/mp4')
+    const contentType = outHeaders.get('content-type');
+    if (!contentType || contentType === 'text/plain') {
+      if (parsed.pathname.endsWith('.ts')) {
+        outHeaders.set('content-type', 'video/mp2t');
+      } else if (parsed.pathname.endsWith('.mp4')) {
+        outHeaders.set('content-type', 'video/mp4');
+      } else if (parsed.pathname.endsWith('.m3u8')) {
+        outHeaders.set('content-type', 'application/x-mpegURL');
+      }
     }
+    
+    console.log(`[PROXY] Final content-type: ${outHeaders.get('content-type')}`);
+    console.log(`[PROXY] Final status: ${upstream.status}`);
+
 
     // Return the response with the exact status code from upstream (crucial for 206 Partial Content)
     return new Response(method === 'HEAD' ? null : upstream.body, {
       status: upstream.status,
       headers: outHeaders,
     })
-  } catch (error) {
-    console.error('Proxy fetch error:', error)
-    return new Response('Proxy error', { status: 502 })
+  } catch (error: any) {
+    console.error('[PROXY] Error:', error.message || error);
+    return new Response('Proxy error: ' + (error.message || 'Unknown'), { status: 502 })
   }
 }
 
