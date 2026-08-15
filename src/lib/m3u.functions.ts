@@ -53,15 +53,23 @@ function parseM3U(content: string): M3UItem[] {
 
       const group = (currentItem.group || "").toLowerCase();
       const name = (currentItem.name || "").toLowerCase();
-      const seriesMarkers = ['serie', 'episodio', 'season', 'temporada', 'multi', 's0', 'e0', 's1', 'e1', ' s', ' e'];
+      
+      // Detecção de série mais rigorosa para evitar filmes nas séries
+      const seriesMarkers = ['serie', 'episodio', 'season', 'temporada', ' s0', ' e0', ' s1', ' e1', ' s2', ' e2', ' s3', ' e3'];
       const isSeries = seriesMarkers.some(m => group.includes(m) || name.includes(m));
       
       currentItem.type = isSeries ? 'series' : 'movie';
       
-      if (line.toLowerCase().includes('movie')) currentItem.type = 'movie';
-      if (line.toLowerCase().includes('series')) currentItem.type = 'series';
+      // Priorizar marcações explícitas da URL se disponíveis
+      // Mas o loop INFINF ainda não tem a URL aqui. A URL vem na próxima linha.
+      // Vamos ajustar a lógica no bloco 'else if (line.startsWith('http'))'
     } else if (line.startsWith('http') && currentItem) {
       currentItem.url = line;
+      const url = line.toLowerCase();
+      
+      // Correção final baseada na URL
+      if (url.includes('/movie/')) currentItem.type = 'movie';
+      else if (url.includes('/series/')) currentItem.type = 'series';
       
       if (currentItem.type === 'series') {
         // Tentar limpar o nome da série removendo marcações de episódios
@@ -161,6 +169,14 @@ export const listM3U = createServerFn({ method: "GET" })
       const allItems = parseM3U(text);
       const filteredItems = allItems.filter(item => {
         const url = item.url.toLowerCase();
+        const group = (item.group || "").toLowerCase();
+        const name = (item.name || "").toLowerCase();
+        
+        // Bloquear conteúdo adulto
+        const adultKeywords = ['xxx', 'adulto', 'porn', 'sexo', 'hentai', 'hot', 'erotico', 'erotica', '18+'];
+        const isAdult = adultKeywords.some(k => group.includes(k) || name.includes(k) || url.includes(k));
+        if (isAdult) return false;
+
         return (url.includes('/movie/') || url.includes('/series/') || url.includes('.mp4') || url.includes('.mkv')) && !url.includes('/live/');
       });
 
