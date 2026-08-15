@@ -60,11 +60,12 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
           }
         }
       });
-    } else if (video.canPlayType("application/vnd.apple.mpegurl") && isHls) {
-      video.src = proxiedSrc;
     } else {
-      // Para .mp4, .ts (via proxy vira stream de bytes) ou outros
+      // Para .mp4, .ts ou Safari com suporte nativo
       video.src = proxiedSrc;
+      
+      // Tentar forçar o carregamento se estiver preso em zero
+      video.load();
     }
 
     return () => {
