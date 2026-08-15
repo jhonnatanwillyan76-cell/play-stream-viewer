@@ -32,7 +32,7 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
         enableWorker: true,
         lowLatencyMode: true,
         backBufferLength: 90,
-        xhrSetup: (xhr) => {
+        xhrSetup: (xhr, url) => {
           xhr.withCredentials = false;
         }
       });
@@ -62,6 +62,7 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
     } else {
       video.src = proxiedSrc;
       video.load();
+      video.muted = true; // Auto-play frequently requires mute
       
       // Tentar play imediato
       const playPromise = video.play();
@@ -116,17 +117,20 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
 
       <video
         ref={videoRef}
+        autoPlay
+        playsInline
         controls
         className="w-full h-full"
         poster={poster}
-        playsInline
         crossOrigin="anonymous"
         onLoadedData={(e) => {
-          // Quando os dados começam a chegar, tentamos forçar o início
           const v = e.currentTarget;
-          if (v.paused) {
-            v.play().catch(() => {});
-          }
+          v.play().catch(err => {
+            console.log("Play failed, requesting user interaction:", err);
+          });
+        }}
+        onCanPlay={(e) => {
+          e.currentTarget.play().catch(() => {});
         }}
       >
         Seu navegador não suporta o player de vídeo.

@@ -31,8 +31,10 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
     const upstream = await fetch(parsed.toString(), { 
       method, 
       headers, 
-      redirect: 'follow'
-    })
+      redirect: 'follow',
+      // Cloudflare worker specific: bypass cache to ensure range requests work correctly
+      cf: { cacheEverything: false } 
+    } as any)
 
     const outHeaders = new Headers()
     
@@ -42,7 +44,9 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
       'content-length', 
       'content-range', 
       'accept-ranges', 
-      'cache-control'
+      'cache-control',
+      'last-modified',
+      'etag'
     ]
 
     for (const key of headersToCopy) {
