@@ -120,14 +120,11 @@ async function getCachedData() {
   
   try {
     const fs = await import('fs/promises');
-    const stats = await fs.stat(CACHE_FILE);
-    if (Date.now() - stats.mtimeMs < CACHE_TTL) {
-      const data = JSON.parse(await fs.readFile(CACHE_FILE, 'utf-8'));
-      memoryCache = { data, timestamp: stats.mtimeMs };
-      return data;
-    }
+    const data = JSON.parse(await fs.readFile(CACHE_FILE, 'utf-8'));
+    memoryCache = { data, timestamp: Date.now() }; // Treat as fresh in memory for this session
+    return data;
   } catch (e) {
-    // Cache file doesn't exist or is invalid
+    console.error('getCachedData error:', e);
   }
   return null;
 }
@@ -161,8 +158,12 @@ export const listM3U = createServerFn({ method: "GET" })
       const text = await res.text();
       
       if (text.includes('DOWNLOAD_LIMIT_REACHED')) {
+        console.warn('Provider LIMIT_REACHED detected in response');
         const stale = await getCachedData();
-        if (stale) return stale;
+        if (stale) {
+          console.log('Serving STALE data due to LIMIT_REACHED');
+          return stale;
+        }
         throw new Error('LIMIT_REACHED');
       }
       
@@ -191,8 +192,12 @@ export const listM3U = createServerFn({ method: "GET" })
       }
       return filteredItems;
     } catch (e) {
+      console.error('SERVER FN ERROR:', e);
       const stale = await getCachedData();
-      if (stale) return stale;
+      if (stale) {
+        console.log('Serving STALE data from cache due to error');
+        return stale;
+      }
       return [];
     }
   });

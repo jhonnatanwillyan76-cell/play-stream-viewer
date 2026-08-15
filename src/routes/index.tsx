@@ -35,10 +35,10 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
-  const { data, error } = useSuspenseQuery(homeQuery);
+  const { data } = useSuspenseQuery(homeQuery);
   const featured = data?.m3u?.[0];
 
-  if (!data || data.m3u.length === 0) {
+  if (!data || !data.m3u || data.m3u.length === 0) {
     return (
       <div className="min-h-screen">
         <SiteHeader />
