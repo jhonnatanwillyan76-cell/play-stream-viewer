@@ -123,7 +123,7 @@ function TitlePage() {
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                  {item.episodes.map((ep, idx) => (
+                  {item.episodes.map((ep: { name: string; url: string }, idx: number) => (
                     <button
                       key={idx}
                       onClick={() => {
