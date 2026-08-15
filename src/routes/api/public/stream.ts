@@ -50,9 +50,8 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
     const upstream = await fetch(parsed.toString(), { 
       method, 
       headers, 
-      redirect: 'follow',
-      // @ts-ignore - Cloudflare Workers specific property
-      cf: { cacheEverything: false }
+      redirect: 'follow'
+
     })
 
     const outHeaders = new Headers()
