@@ -191,8 +191,12 @@ export const listM3U = createServerFn({ method: "GET" })
       }
       return filteredItems;
     } catch (e) {
+      console.error('SERVER FN ERROR:', e);
       const stale = await getCachedData();
-      if (stale) return stale;
+      if (stale) {
+        console.log('Serving STALE data from cache due to error');
+        return stale;
+      }
       return [];
     }
   });
