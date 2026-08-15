@@ -54,12 +54,13 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
     outHeaders.set('Access-Control-Allow-Origin', '*')
     outHeaders.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
     outHeaders.set('Access-Control-Allow-Headers', '*')
+    outHeaders.set('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges')
     
     if (parsed.pathname.endsWith('.ts')) {
       outHeaders.set('content-type', 'video/mp2t')
     }
 
-    // Crucial for video playback in browsers: handle 206 Partial Content correctly
+    // Handle range response status
     return new Response(method === 'HEAD' ? null : upstream.body, {
       status: upstream.status,
       headers: outHeaders,
@@ -75,6 +76,16 @@ export const Route = createFileRoute('/api/public/stream')({
     handlers: {
       GET: ({ request }) => proxy(request, 'GET'),
       HEAD: ({ request }) => proxy(request, 'HEAD'),
+      OPTIONS: async () => {
+        return new Response(null, {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+            'Access-Control-Allow-Headers': '*',
+            'Access-Control-Max-Age': '86400',
+          }
+        })
+      }
     },
   },
 })
