@@ -13,10 +13,23 @@ export interface M3UItem {
 const M3U_URL = "http://ph2.lat/get.php?username=334449926&password=427429973&type=m3u_plus&output=ts";
 const CACHE_TTL = 30 * 60 * 1000; 
 
+function slugify(text: string) {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 function parseM3U(content: string): M3UItem[] {
   const items: M3UItem[] = [];
+  const seriesMap = new Map<string, M3UItem>();
   const lines = content.split('\n');
-  let currentItem: Partial<M3UItem> | null = null;
+  let currentItem: Partial<M3UItem> & { rawName?: string } | null = null;
 
   for (let line of lines) {
     line = line.trim();
@@ -32,6 +45,7 @@ function parseM3U(content: string): M3UItem[] {
       
       currentItem = {
         name: rawName,
+        rawName: rawName,
         logo: logoMatch ? logoMatch[1] : undefined,
         group: groupMatch ? groupMatch[1] : undefined,
         type: 'movie'
@@ -39,7 +53,7 @@ function parseM3U(content: string): M3UItem[] {
 
       const group = (currentItem.group || "").toLowerCase();
       const name = (currentItem.name || "").toLowerCase();
-      const seriesMarkers = ['serie', 'episodio', 'season', 'temporada', 'multi', 's0', 'e0', 's1', 'e1'];
+      const seriesMarkers = ['serie', 'episodio', 'season', 'temporada', 'multi', 's0', 'e0', 's1', 'e1', ' s', ' e'];
       const isSeries = seriesMarkers.some(m => group.includes(m) || name.includes(m));
       
       currentItem.type = isSeries ? 'series' : 'movie';
@@ -48,11 +62,44 @@ function parseM3U(content: string): M3UItem[] {
       if (line.toLowerCase().includes('series')) currentItem.type = 'series';
     } else if (line.startsWith('http') && currentItem) {
       currentItem.url = line;
-      items.push(currentItem as M3UItem);
+      
+      if (currentItem.type === 'series') {
+        // Tentar limpar o nome da série removendo marcações de episódios
+        // Ex: "The Boys S01 E01" -> "The Boys"
+        let baseName = currentItem.name!
+          .replace(/[Ss]\d+[Ee]\d+/g, '') // S01E01
+          .replace(/[Ss]eason\s*\d+/gi, '') // Season 1
+          .replace(/[Tt]emporada\s*\d+/gi, '') // Temporada 1
+          .replace(/[Ee]p\.\s*\d+/gi, '') // Ep. 1
+          .replace(/[Ee]pis[óo]dio\s*\d+/gi, '') // Episodio 1
+          .replace(/[\(\[].*?[\)\]]/g, '') // (Legendado), [Dublado]
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        const slug = slugify(baseName || currentItem.name!);
+        
+        if (seriesMap.has(slug)) {
+          const existing = seriesMap.get(slug)!;
+          existing.episodes!.push({ name: currentItem.name!, url: line });
+        } else {
+          const newItem: M3UItem = {
+            ...currentItem,
+            name: baseName || currentItem.name!,
+            slug,
+            url: line,
+            episodes: [{ name: currentItem.name!, url: line }]
+          } as M3UItem;
+          seriesMap.set(slug, newItem);
+        }
+      } else {
+        const slug = slugify(currentItem.name!);
+        items.push({ ...currentItem, slug } as M3UItem);
+      }
       currentItem = null;
     }
   }
-  return items;
+  
+  return [...items, ...Array.from(seriesMap.values())];
 }
 
 let memoryCache: { data: M3UItem[], timestamp: number } | null = null;
