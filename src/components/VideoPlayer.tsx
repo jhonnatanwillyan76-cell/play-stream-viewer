@@ -8,7 +8,7 @@ interface VideoPlayerProps {
   branding?: string;
 }
 
-export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
+export function VideoPlayer({ src, poster, branding, onFullScreen }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const [error, setError] = useState<string | null>(null);
