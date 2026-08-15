@@ -24,11 +24,8 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
       hlsRef.current = null;
     }
 
-    // Proxy para contornar CORS e cabeçalhos
     const proxiedSrc = `/api/public/stream?url=${encodeURIComponent(src)}`;
     const isHls = src.includes(".m3u8") || src.includes("output=m3u8");
-
-    console.log("Loading video:", { src, proxiedSrc, isHls });
 
     if (isHls && Hls.isSupported()) {
       const hls = new Hls({
@@ -63,15 +60,14 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
         }
       });
     } else {
-      // Fallback para .mp4 ou .ts via proxy
-      // Importante: definir src ANTES de carregar
       video.src = proxiedSrc;
       video.load();
       
-      const playAttempt = video.play();
-      if (playAttempt !== undefined) {
-        playAttempt.catch(err => {
-          console.warn("Autoplay was prevented, waiting for interaction.", err);
+      // Tentar play imediato
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          console.warn("Autoplay blocked");
         });
       }
     }
@@ -81,6 +77,7 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
         hlsRef.current.destroy();
       }
       if (video) {
+        video.pause();
         video.src = "";
         video.load();
       }
@@ -124,6 +121,13 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
         poster={poster}
         playsInline
         crossOrigin="anonymous"
+        onLoadedData={(e) => {
+          // Quando os dados começam a chegar, tentamos forçar o início
+          const v = e.currentTarget;
+          if (v.paused) {
+            v.play().catch(() => {});
+          }
+        }}
       >
         Seu navegador não suporta o player de vídeo.
       </video>
