@@ -119,6 +119,7 @@ function TitlePage() {
                     src={selectedEpisode.url}
                     poster={item.logo}
                     branding="MARÉ TV"
+                    onFullScreen={handleFullScreen}
                   />
                 </div>
               </div>
