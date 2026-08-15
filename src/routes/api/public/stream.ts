@@ -31,9 +31,7 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
     const upstream = await fetch(parsed.toString(), { 
       method, 
       headers, 
-      redirect: 'follow',
-      // @ts-ignore - nodejs_compat allows some extra fetch options in some environments
-      duplex: 'half' 
+      redirect: 'follow'
     })
 
     const outHeaders = new Headers()
@@ -44,8 +42,7 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
       'content-length', 
       'content-range', 
       'accept-ranges', 
-      'cache-control',
-      'content-disposition'
+      'cache-control'
     ]
 
     for (const key of headersToCopy) {
@@ -58,15 +55,11 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
     outHeaders.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
     outHeaders.set('Access-Control-Allow-Headers', '*')
     
-    // Fix for infinite loading: some providers need specific content-type for .ts
-    if (parsed.pathname.endsWith('.ts') && !outHeaders.has('content-type')) {
+    if (parsed.pathname.endsWith('.ts')) {
       outHeaders.set('content-type', 'video/mp2t')
     }
 
-    if (!outHeaders.has('accept-ranges')) {
-      outHeaders.set('accept-ranges', 'bytes')
-    }
-
+    // Crucial for video playback in browsers: handle 206 Partial Content correctly
     return new Response(method === 'HEAD' ? null : upstream.body, {
       status: upstream.status,
       headers: outHeaders,
