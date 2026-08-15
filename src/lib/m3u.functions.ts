@@ -168,7 +168,15 @@ function parseM3U(content: string): M3UItem[] {
     }
   }
   
-  return [...Array.from(movieMap.values()).map(({quality, ...rest}) => rest), ...Array.from(seriesMap.values())];
+  return [
+    ...Array.from(movieMap.values()).map(({ quality, ...rest }) => ({
+      ...rest,
+      variants: (rest.variants ?? []).sort(
+        (a, b) => Number(b.compatible) - Number(a.compatible),
+      ),
+    })),
+    ...Array.from(seriesMap.values()),
+  ];
 }
 
 let memoryCache: { data: M3UItem[], timestamp: number } | null = null;
