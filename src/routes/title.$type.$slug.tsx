@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { listM3U, type M3UItem } from "@/lib/m3u.functions";
 import { SiteHeader } from "@/components/SiteHeader";
+import { GlobalLoadingIndicator } from "@/components/GlobalLoadingIndicator";
 import { useState, useRef, useEffect } from "react";
 
 const titleQuery = (slug: string) =>
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/title/$type/$slug")({
   loader: ({ context, params }) =>
     context.queryClient.ensureQueryData(titleQuery(params.slug)),
   component: TitlePage,
+  pendingComponent: () => <GlobalLoadingIndicator />,
 });
 
 function TitlePage() {

@@ -3,6 +3,7 @@ import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { listM3U, type M3UItem } from "@/lib/m3u.functions";
 import { SiteHeader } from "@/components/SiteHeader";
+import { GlobalLoadingIndicator } from "@/components/GlobalLoadingIndicator";
 
 const searchSchema = z.object({ page: z.number().int().min(1).max(200).catch(1) });
 
@@ -32,6 +33,7 @@ export const Route = createFileRoute("/browse/$type")({
       archiveQuery(type as "movie" | "series", deps.page),
     );
   },
+  pendingComponent: () => <GlobalLoadingIndicator />,
   head: () => ({
     meta: [
       {

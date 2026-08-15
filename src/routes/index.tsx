@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { listM3U, type M3UItem } from "@/lib/m3u.functions";
 import { SiteHeader } from "@/components/SiteHeader";
+import { GlobalLoadingIndicator } from "@/components/GlobalLoadingIndicator";
 
 const homeQuery = queryOptions({
   queryKey: ["home"],
@@ -19,11 +20,7 @@ const homeQuery = queryOptions({
 export const Route = createFileRoute("/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(homeQuery),
   component: Home,
-  pendingComponent: () => (
-    <div className="min-h-screen grid place-items-center text-muted-foreground">
-      Carregando catálogo…
-    </div>
-  ),
+  pendingComponent: () => <GlobalLoadingIndicator />,
   errorComponent: ({ error }) => (
     <div className="min-h-screen grid place-items-center text-center px-6">
       <div>
