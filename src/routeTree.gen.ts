@@ -14,6 +14,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as BrowseTypeRouteImport } from './routes/browse.$type'
 import { Route as TitleTypeSlugRouteImport } from './routes/title.$type.$slug'
 import { Route as ApiPublicM3uTestRouteImport } from './routes/api/public/m3u-test'
+import { Route as ApiPublicM3uDebugRouteImport } from './routes/api/public/m3u-debug'
 import { Route as ApiPublicM3uRouteImport } from './routes/api/public/m3u'
 
 const SearchRoute = SearchRouteImport.update({
@@ -41,6 +42,11 @@ const ApiPublicM3uTestRoute = ApiPublicM3uTestRouteImport.update({
   path: '/api/public/m3u-test',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicM3uDebugRoute = ApiPublicM3uDebugRouteImport.update({
+  id: '/api/public/m3u-debug',
+  path: '/api/public/m3u-debug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicM3uRoute = ApiPublicM3uRouteImport.update({
   id: '/api/public/m3u',
   path: '/api/public/m3u',
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/search': typeof SearchRoute
   '/browse/$type': typeof BrowseTypeRoute
   '/api/public/m3u': typeof ApiPublicM3uRoute
+  '/api/public/m3u-debug': typeof ApiPublicM3uDebugRoute
   '/api/public/m3u-test': typeof ApiPublicM3uTestRoute
   '/title/$type/$slug': typeof TitleTypeSlugRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/search': typeof SearchRoute
   '/browse/$type': typeof BrowseTypeRoute
   '/api/public/m3u': typeof ApiPublicM3uRoute
+  '/api/public/m3u-debug': typeof ApiPublicM3uDebugRoute
   '/api/public/m3u-test': typeof ApiPublicM3uTestRoute
   '/title/$type/$slug': typeof TitleTypeSlugRoute
 }
@@ -69,6 +77,7 @@ export interface FileRoutesById {
   '/search': typeof SearchRoute
   '/browse/$type': typeof BrowseTypeRoute
   '/api/public/m3u': typeof ApiPublicM3uRoute
+  '/api/public/m3u-debug': typeof ApiPublicM3uDebugRoute
   '/api/public/m3u-test': typeof ApiPublicM3uTestRoute
   '/title/$type/$slug': typeof TitleTypeSlugRoute
 }
@@ -79,6 +88,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/browse/$type'
     | '/api/public/m3u'
+    | '/api/public/m3u-debug'
     | '/api/public/m3u-test'
     | '/title/$type/$slug'
   fileRoutesByTo: FileRoutesByTo
@@ -87,6 +97,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/browse/$type'
     | '/api/public/m3u'
+    | '/api/public/m3u-debug'
     | '/api/public/m3u-test'
     | '/title/$type/$slug'
   id:
@@ -95,6 +106,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/browse/$type'
     | '/api/public/m3u'
+    | '/api/public/m3u-debug'
     | '/api/public/m3u-test'
     | '/title/$type/$slug'
   fileRoutesById: FileRoutesById
@@ -104,6 +116,7 @@ export interface RootRouteChildren {
   SearchRoute: typeof SearchRoute
   BrowseTypeRoute: typeof BrowseTypeRoute
   ApiPublicM3uRoute: typeof ApiPublicM3uRoute
+  ApiPublicM3uDebugRoute: typeof ApiPublicM3uDebugRoute
   ApiPublicM3uTestRoute: typeof ApiPublicM3uTestRoute
   TitleTypeSlugRoute: typeof TitleTypeSlugRoute
 }
@@ -145,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicM3uTestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/m3u-debug': {
+      id: '/api/public/m3u-debug'
+      path: '/api/public/m3u-debug'
+      fullPath: '/api/public/m3u-debug'
+      preLoaderRoute: typeof ApiPublicM3uDebugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/m3u': {
       id: '/api/public/m3u'
       path: '/api/public/m3u'
@@ -160,6 +180,7 @@ const rootRouteChildren: RootRouteChildren = {
   SearchRoute: SearchRoute,
   BrowseTypeRoute: BrowseTypeRoute,
   ApiPublicM3uRoute: ApiPublicM3uRoute,
+  ApiPublicM3uDebugRoute: ApiPublicM3uDebugRoute,
   ApiPublicM3uTestRoute: ApiPublicM3uTestRoute,
   TitleTypeSlugRoute: TitleTypeSlugRoute,
 }
