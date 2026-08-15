@@ -160,6 +160,12 @@ export const listM3U = createServerFn({ method: "GET" })
       if (text.includes('DOWNLOAD_LIMIT_REACHED')) {
         const stale = await getCachedData();
         if (stale) return stale;
+        console.warn('Provider LIMIT_REACHED detected in response');
+        const stale = await getCachedData();
+        if (stale) {
+           console.log('Serving STALE data due to LIMIT_REACHED');
+           return stale;
+        }
         throw new Error('LIMIT_REACHED');
       }
       
