@@ -11,8 +11,9 @@ const homeQuery = queryOptions({
     const series = m3u.filter(i => i.type === 'series').sort((a, b) => b.name.localeCompare(a.name));
     return { filmes, series, m3u };
   },
-  staleTime: 30 * 1000, // Reduced staleTime to help with limit issues
-  gcTime: 60 * 1000,
+  staleTime: 60 * 60 * 1000, // 1 hour stale time for UI
+  gcTime: 24 * 60 * 60 * 1000,
+
 });
 
 export const Route = createFileRoute("/")({
