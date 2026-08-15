@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SearchRouteImport } from './routes/search'
-import { Route as AoVivoRouteImport } from './routes/ao-vivo'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BrowseTypeRouteImport } from './routes/browse.$type'
 import { Route as TitleTypeSlugRouteImport } from './routes/title.$type.$slug'
@@ -18,11 +17,6 @@ import { Route as TitleTypeSlugRouteImport } from './routes/title.$type.$slug'
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AoVivoRoute = AoVivoRouteImport.update({
-  id: '/ao-vivo',
-  path: '/ao-vivo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -43,14 +37,12 @@ const TitleTypeSlugRoute = TitleTypeSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/ao-vivo': typeof AoVivoRoute
   '/search': typeof SearchRoute
   '/browse/$type': typeof BrowseTypeRoute
   '/title/$type/$slug': typeof TitleTypeSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/ao-vivo': typeof AoVivoRoute
   '/search': typeof SearchRoute
   '/browse/$type': typeof BrowseTypeRoute
   '/title/$type/$slug': typeof TitleTypeSlugRoute
@@ -58,33 +50,20 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/ao-vivo': typeof AoVivoRoute
   '/search': typeof SearchRoute
   '/browse/$type': typeof BrowseTypeRoute
   '/title/$type/$slug': typeof TitleTypeSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/ao-vivo'
-    | '/search'
-    | '/browse/$type'
-    | '/title/$type/$slug'
+  fullPaths: '/' | '/search' | '/browse/$type' | '/title/$type/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ao-vivo' | '/search' | '/browse/$type' | '/title/$type/$slug'
-  id:
-    | '__root__'
-    | '/'
-    | '/ao-vivo'
-    | '/search'
-    | '/browse/$type'
-    | '/title/$type/$slug'
+  to: '/' | '/search' | '/browse/$type' | '/title/$type/$slug'
+  id: '__root__' | '/' | '/search' | '/browse/$type' | '/title/$type/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AoVivoRoute: typeof AoVivoRoute
   SearchRoute: typeof SearchRoute
   BrowseTypeRoute: typeof BrowseTypeRoute
   TitleTypeSlugRoute: typeof TitleTypeSlugRoute
@@ -97,13 +76,6 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ao-vivo': {
-      id: '/ao-vivo'
-      path: '/ao-vivo'
-      fullPath: '/ao-vivo'
-      preLoaderRoute: typeof AoVivoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -132,7 +104,6 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AoVivoRoute: AoVivoRoute,
   SearchRoute: SearchRoute,
   BrowseTypeRoute: BrowseTypeRoute,
   TitleTypeSlugRoute: TitleTypeSlugRoute,
@@ -140,3 +111,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

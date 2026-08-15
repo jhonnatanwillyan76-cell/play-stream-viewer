@@ -17,7 +17,6 @@ export function SiteHeader() {
           <NavLink to="/" label="Início" exact />
           <NavLink to="/browse/filmes" label="Filmes" />
           <NavLink to="/browse/series" label="Séries" />
-          <NavLink to="/ao-vivo" label="Ao Vivo" />
           <NavLink to="/search" label="Buscar" />
         </nav>
       </div>
