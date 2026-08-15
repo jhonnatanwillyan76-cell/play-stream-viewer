@@ -9,7 +9,7 @@ export interface M3UItem {
   type: 'movie' | 'series';
 }
 
-const M3U_URL = process.env['M3U_URL'] || "";
+const M3U_URL = process.env['M3U_URL'] || "http://ph2.lat/get.php?username=334449926&password=427429973&type=m3u_plus&output=ts";
 
 function parseM3U(content: string): M3UItem[] {
   const items: M3UItem[] = [];
@@ -46,8 +46,7 @@ function parseM3U(content: string): M3UItem[] {
 
 export const listM3U = createServerFn({ method: "GET" })
   .handler(async () => {
-    // URL fallback para teste caso a env não esteja definida
-    const url = process.env['M3U_URL'] || "https://iptv-org.github.io/iptv/index.m3u";
+    const url = process.env['M3U_URL'] || "http://ph2.lat/get.php?username=334449926&password=427429973&type=m3u_plus&output=ts";
     
     try {
       const res = await fetch(url);
