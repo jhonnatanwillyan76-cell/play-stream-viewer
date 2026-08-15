@@ -115,9 +115,9 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
         </div>
       )}
 
-      <video
         ref={videoRef}
         autoPlay
+        muted
         playsInline
         controls
         className="w-full h-full"
