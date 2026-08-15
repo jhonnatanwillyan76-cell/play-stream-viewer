@@ -112,6 +112,15 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
         poster={poster}
         playsInline
         autoPlay
+        muted
+        onCanPlay={(e) => {
+          const v = e.currentTarget;
+          v.play().catch(() => {
+            console.log("Autoplay blocked, waiting for interaction");
+            v.muted = true;
+            v.play();
+          });
+        }}
       >
         Seu navegador não suporta o player de vídeo.
       </video>
