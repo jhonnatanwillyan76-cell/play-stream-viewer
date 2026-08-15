@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-const ALLOWED_HOSTS = ['ph2.lat', 'livecreative.digital', 'cdn.livecreative.digital', 'edge.livecreative.digital', 'streaming.ph2.lat']
+const ALLOWED_HOSTS = ['ph2.lat', 'livecreative.digital', 'cdn.livecreative.digital', 'edge.livecreative.digital', 'streaming.ph2.lat', 'livecreative.net', 'livecreative.site']
 
 async function proxy(request: Request, method: 'GET' | 'HEAD') {
   const url = new URL(request.url)
