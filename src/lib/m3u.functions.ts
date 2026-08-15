@@ -46,13 +46,11 @@ function parseM3U(content: string): M3UItem[] {
 
 export const listM3U = createServerFn({ method: "GET" })
   .handler(async () => {
-    if (!M3U_URL) {
-      console.warn("M3U_URL not set. Using empty list.");
-      return [];
-    }
+    // URL fallback para teste caso a env não esteja definida
+    const url = process.env['M3U_URL'] || "https://iptv-org.github.io/iptv/index.m3u";
     
     try {
-      const res = await fetch(M3U_URL);
+      const res = await fetch(url);
       if (!res.ok) throw new Error(`Fetch M3U failed: ${res.status}`);
       const text = await res.text();
       return parseM3U(text);

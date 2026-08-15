@@ -1,12 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { listHome, type CardItem } from "@/lib/bludv.functions";
+import { listM3U } from "@/lib/m3u.functions";
 import { SiteHeader } from "@/components/SiteHeader";
 import { PosterCard } from "@/components/PosterCard";
 
 const homeQuery = queryOptions({
   queryKey: ["home"],
-  queryFn: () => listHome(),
+  queryFn: async () => {
+    const [bludv, m3u] = await Promise.all([listHome(), listM3U()]);
+    return { ...bludv, m3u };
+  },
   staleTime: 5 * 60 * 1000,
 });
 
@@ -39,6 +43,9 @@ function Home() {
       <main className="mx-auto max-w-7xl px-4 sm:px-6 py-10 space-y-14">
         <Row title="Filmes em destaque" items={data.filmes} moreTo="/browse/filmes" />
         <Row title="Séries em destaque" items={data.series} moreTo="/browse/series" />
+        {data.m3u && data.m3u.length > 0 && (
+          <M3URow title="Conteúdo M3U" items={data.m3u} />
+        )}
       </main>
       <Footer />
     </div>
@@ -115,6 +122,32 @@ function Row({ title, items, moreTo }: { title: string; items: CardItem[]; moreT
     </section>
   );
 }
+
+function M3URow({ title, items }: { title: string; items: any[] }) {
+  return (
+    <section>
+      <div className="flex items-end justify-between mb-4">
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight">{title}</h2>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {items.slice(0, 12).map((it, idx) => (
+          <div key={idx} className="group relative aspect-[2/3] overflow-hidden rounded-xl bg-secondary ring-1 ring-border transition-all hover:ring-primary/60">
+            {it.logo ? (
+              <img src={it.logo} alt={it.name} className="h-full w-full object-cover" />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center p-4 text-center text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                {it.name}
+              </div>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+              <a href={it.url} target="_blank" rel="noopener noreferrer" className="w-full py-2 bg-primary text-primary-foreground text-center rounded-lg font-bold text-xs uppercase tracking-wider">
+                Assistir
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
 
 function Footer() {
   return (
