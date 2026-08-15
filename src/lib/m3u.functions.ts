@@ -8,6 +8,7 @@ export interface M3UItem {
   type: 'movie' | 'series';
   slug: string;
   episodes?: { name: string; url: string }[];
+  variants?: { label: string; url: string; compatible: boolean }[];
 }
 
 const M3U_URL = "http://ph2.lat/get.php?username=334449926&password=427429973&type=m3u_plus&output=ts";
@@ -25,15 +26,25 @@ function slugify(text: string) {
     .replace(/^-+|-+$/g, '');
 }
 
+// Streams em 4K/HDR normalmente são HEVC (H.265) + áudio E-AC3, que a maioria
+// dos navegadores não decodifica: o usuário ouve o áudio e não vê a imagem.
+// Por isso priorizamos versões compatíveis (1080p/720p H.264).
+export function isBrowserCompatible(name: string): boolean {
+  const n = name.toLowerCase();
+  return !/(4k|uhd|2160p|hdr|hevc|h\.?265|x265|dolby\s*vision|\bdv\b|hybrid)/.test(n);
+}
+
 function getQualityScore(name: string): number {
   const n = name.toLowerCase();
-  if (n.includes('4k') || n.includes('uhd')) return 100;
-  if (n.includes('2160p')) return 90;
-  if (n.includes('1080p') || n.includes('fhd') || n.includes('bluray')) return 80;
-  if (n.includes('720p') || n.includes('hd')) return 60;
-  if (n.includes('hdtv')) return 50;
-  if (n.includes('cam') || n.includes('ts') || n.includes('hc')) return 10;
-  return 40; // Default
+  let score = 40;
+  if (n.includes('1080p') || n.includes('fhd') || n.includes('bluray')) score = 80;
+  else if (n.includes('720p') || n.includes('hd')) score = 60;
+  else if (n.includes('hdtv')) score = 50;
+  else if (n.includes('cam') || n.includes('hc')) score = 10;
+  else if (n.includes('4k') || n.includes('uhd') || n.includes('2160p')) score = 70;
+  // Incompatível com navegador (HEVC/HDR) fica sempre atrás
+  if (!isBrowserCompatible(name)) score -= 1000;
+  return score;
 }
 
 function cleanMovieName(name: string): string {
@@ -124,25 +135,52 @@ function parseM3U(content: string): M3UItem[] {
         const cleanedName = cleanMovieName(currentItem.name!);
         const slug = slugify(cleanedName || currentItem.name!);
         const quality = getQualityScore(currentItem.name!);
+        const variant = {
+          label: currentItem.rawName || currentItem.name!,
+          url: line,
+          compatible: isBrowserCompatible(currentItem.rawName || currentItem.name!),
+        };
 
-        if (movieMap.has(slug)) {
-          const existing = movieMap.get(slug)!;
+        const existing = movieMap.get(slug);
+        if (existing) {
+          existing.variants!.push(variant);
           if (quality > existing.quality) {
-            movieMap.set(slug, { ...currentItem, name: cleanedName, slug, quality } as M3UItem & { quality: number });
+            const variants = existing.variants!;
+            movieMap.set(slug, {
+              ...(currentItem as M3UItem),
+              name: cleanedName,
+              slug,
+              quality,
+              variants,
+            } as M3UItem & { quality: number });
           }
         } else {
-          movieMap.set(slug, { ...currentItem, name: cleanedName, slug, quality } as M3UItem & { quality: number });
+          movieMap.set(slug, {
+            ...(currentItem as M3UItem),
+            name: cleanedName,
+            slug,
+            quality,
+            variants: [variant],
+          } as M3UItem & { quality: number });
         }
       }
       currentItem = null;
     }
   }
   
-  return [...Array.from(movieMap.values()).map(({quality, ...rest}) => rest), ...Array.from(seriesMap.values())];
+  return [
+    ...Array.from(movieMap.values()).map(({ quality, ...rest }) => ({
+      ...rest,
+      variants: (rest.variants ?? []).sort(
+        (a, b) => Number(b.compatible) - Number(a.compatible),
+      ),
+    })),
+    ...Array.from(seriesMap.values()),
+  ];
 }
 
 let memoryCache: { data: M3UItem[], timestamp: number } | null = null;
-const CACHE_FILE = '/tmp/m3u_cache.json';
+const CACHE_FILE = '/tmp/m3u_cache_v2.json';
 
 async function getCachedData() {
   if (memoryCache && (Date.now() - memoryCache.timestamp < CACHE_TTL)) {

@@ -122,6 +122,34 @@ function TitlePage() {
                     onFullScreen={handleFullScreen}
                   />
                 </div>
+
+                {item.type === "movie" && (item.variants?.length ?? 0) > 1 && (
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
+                      Versões disponíveis
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {item.variants!.map((v: { label: string; url: string; compatible: boolean }) => (
+                        <button
+                          key={v.url}
+                          onClick={() => setSelectedEpisode({ name: v.label, url: v.url })}
+                          className={`px-4 py-2 rounded-full text-xs font-bold border transition-all ${
+                            selectedEpisode.url === v.url
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-secondary/40 border-border hover:border-primary/50"
+                          }`}
+                          title={v.compatible ? "Compatível com o navegador" : "4K/HDR (pode não exibir imagem no navegador)"}
+                        >
+                          {v.label}
+                          {!v.compatible && <span className="ml-2 opacity-60">⚠</span>}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Versões 4K/HDR usam HEVC e muitos navegadores só reproduzem o áudio. Use uma versão sem o aviso ⚠.
+                    </p>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="aspect-video flex flex-col items-center justify-center rounded-2xl bg-secondary/50 border-2 border-dashed border-border text-center p-8">
