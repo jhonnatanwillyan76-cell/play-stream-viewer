@@ -31,9 +31,7 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
     const upstream = await fetch(parsed.toString(), { 
       method, 
       headers, 
-      redirect: 'follow',
-      // @ts-ignore - nodejs_compat allows some extra fetch options in some environments
-      duplex: 'half' 
+      redirect: 'follow'
     })
 
     const outHeaders = new Headers()
@@ -44,8 +42,7 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
       'content-length', 
       'content-range', 
       'accept-ranges', 
-      'cache-control',
-      'content-disposition'
+      'cache-control'
     ]
 
     for (const key of headersToCopy) {
@@ -57,16 +54,16 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
     outHeaders.set('Access-Control-Allow-Origin', '*')
     outHeaders.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
     outHeaders.set('Access-Control-Allow-Headers', '*')
+    outHeaders.set('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges')
     
-    // Fix for infinite loading: some providers need specific content-type for .ts
-    if (parsed.pathname.endsWith('.ts') && !outHeaders.has('content-type')) {
+    // Explicitly set content-type if missing or incorrect for common formats
+    if (parsed.pathname.endsWith('.ts')) {
       outHeaders.set('content-type', 'video/mp2t')
+    } else if (parsed.pathname.endsWith('.mp4')) {
+      outHeaders.set('content-type', 'video/mp4')
     }
 
-    if (!outHeaders.has('accept-ranges')) {
-      outHeaders.set('accept-ranges', 'bytes')
-    }
-
+    // Return the response with the exact status code from upstream (crucial for 206 Partial Content)
     return new Response(method === 'HEAD' ? null : upstream.body, {
       status: upstream.status,
       headers: outHeaders,
@@ -82,6 +79,16 @@ export const Route = createFileRoute('/api/public/stream')({
     handlers: {
       GET: ({ request }) => proxy(request, 'GET'),
       HEAD: ({ request }) => proxy(request, 'HEAD'),
+      OPTIONS: async () => {
+        return new Response(null, {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+            'Access-Control-Allow-Headers': '*',
+            'Access-Control-Max-Age': '86400',
+          }
+        })
+      }
     },
   },
 })

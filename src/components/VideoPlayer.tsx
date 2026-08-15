@@ -24,7 +24,6 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
       hlsRef.current = null;
     }
 
-    // Usar proxy para contornar problemas de CORS e headers que causam carregamento infinito
     const proxiedSrc = `/api/public/stream?url=${encodeURIComponent(src)}`;
     const isHls = src.includes(".m3u8") || src.includes("output=m3u8");
 
@@ -61,16 +60,26 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
         }
       });
     } else {
-      // Para .mp4, .ts ou Safari com suporte nativo
       video.src = proxiedSrc;
-      
-      // Tentar forçar o carregamento se estiver preso em zero
       video.load();
+      
+      // Tentar play imediato
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          console.warn("Autoplay blocked");
+        });
+      }
     }
 
     return () => {
       if (hlsRef.current) {
         hlsRef.current.destroy();
+      }
+      if (video) {
+        video.pause();
+        video.src = "";
+        video.load();
       }
     };
   }, [src]);
@@ -111,7 +120,14 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
         className="w-full h-full"
         poster={poster}
         playsInline
-        autoPlay
+        crossOrigin="anonymous"
+        onLoadedData={(e) => {
+          // Quando os dados começam a chegar, tentamos forçar o início
+          const v = e.currentTarget;
+          if (v.paused) {
+            v.play().catch(() => {});
+          }
+        }}
       >
         Seu navegador não suporta o player de vídeo.
       </video>
