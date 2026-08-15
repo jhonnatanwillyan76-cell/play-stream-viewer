@@ -6,6 +6,8 @@ export interface M3UItem {
   logo?: string;
   group?: string;
   type: 'movie' | 'series';
+  slug: string;
+  episodes?: { name: string; url: string }[];
 }
 
 const M3U_URL = "http://ph2.lat/get.php?username=334449926&password=427429973&type=m3u_plus&output=ts";
