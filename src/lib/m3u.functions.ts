@@ -83,25 +83,29 @@ export const listM3U = createServerFn({ method: "GET" })
       return allItems.filter(item => {
         const group = item.group?.toLowerCase() || "";
         const name = item.name?.toLowerCase() || "";
+        const url = item.url.toLowerCase();
         
         // Comprehensive live TV filtering
+        // Channels in Xtream lists usually have a specific pattern and lack VOD extensions
         const isLive = 
           group.includes('ao vivo') || 
           group.includes('live') || 
           group.includes('canais') || 
-          group.includes('tv abertos') || 
+          group.includes('abertos') || 
           group.includes('24h') ||
           group.includes('variedades') ||
           group.includes('esportes') ||
           group.includes('noticias') ||
-          group.includes('filmes e series') || // Some lists use this for channels
-          name.includes('ao vivo');
+          name.includes('ao vivo') ||
+          name.includes('full hd') ||
+          name.includes(' (h265)') ||
+          (url.includes(':') && !url.includes('/movie/') && !url.includes('/series/') && !url.includes('.mp4') && !url.includes('.mkv') && !url.includes('.avi'));
 
-        // Xtream API links for live usually look different from VOD
-        const looksLikeVod = item.url.includes('/movie/') || item.url.includes('/series/') || item.url.includes('.mp4') || item.url.includes('.mkv');
+        // Xtream API links for VOD are very specific
+        const isVod = url.includes('/movie/') || url.includes('/series/') || url.includes('.mp4') || url.includes('.mkv') || url.includes('.avi');
         
-        // If it looks like VOD, keep it even if group filter is aggressive
-        if (looksLikeVod) return true;
+        // Strict requirement: Only movies and series
+        if (isVod) return true;
         
         return !isLive;
       });
