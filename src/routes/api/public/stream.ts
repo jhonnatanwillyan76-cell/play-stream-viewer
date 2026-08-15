@@ -37,14 +37,11 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
   if (range) headers['Range'] = range
 
   try {
-    console.log(`Proxying: ${parsed.toString()}`);
     const upstream = await fetch(parsed.toString(), { 
       method, 
       headers, 
       redirect: 'follow',
     })
-    console.log(`Upstream status: ${upstream.status} ${upstream.statusText}`);
-    console.log(`Upstream headers: ${JSON.stringify(Object.fromEntries(upstream.headers.entries()))}`);
 
     const outHeaders = new Headers()
     
