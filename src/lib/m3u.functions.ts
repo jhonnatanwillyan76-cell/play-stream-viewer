@@ -135,14 +135,33 @@ function parseM3U(content: string): M3UItem[] {
         const cleanedName = cleanMovieName(currentItem.name!);
         const slug = slugify(cleanedName || currentItem.name!);
         const quality = getQualityScore(currentItem.name!);
+        const variant = {
+          label: currentItem.rawName || currentItem.name!,
+          url: line,
+          compatible: isBrowserCompatible(currentItem.rawName || currentItem.name!),
+        };
 
-        if (movieMap.has(slug)) {
-          const existing = movieMap.get(slug)!;
+        const existing = movieMap.get(slug);
+        if (existing) {
+          existing.variants!.push(variant);
           if (quality > existing.quality) {
-            movieMap.set(slug, { ...currentItem, name: cleanedName, slug, quality } as M3UItem & { quality: number });
+            const variants = existing.variants!;
+            movieMap.set(slug, {
+              ...(currentItem as M3UItem),
+              name: cleanedName,
+              slug,
+              quality,
+              variants,
+            } as M3UItem & { quality: number });
           }
         } else {
-          movieMap.set(slug, { ...currentItem, name: cleanedName, slug, quality } as M3UItem & { quality: number });
+          movieMap.set(slug, {
+            ...(currentItem as M3UItem),
+            name: cleanedName,
+            slug,
+            quality,
+            variants: [variant],
+          } as M3UItem & { quality: number });
         }
       }
       currentItem = null;
