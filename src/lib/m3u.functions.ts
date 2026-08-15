@@ -81,33 +81,13 @@ export const listM3U = createServerFn({ method: "GET" })
       // Filter to only include movies and series, excluding live TV channels if any
       // Usually M3U lists from providers have specific group names for VOD
       return allItems.filter(item => {
-        const group = item.group?.toLowerCase() || "";
-        const name = item.name?.toLowerCase() || "";
         const url = item.url.toLowerCase();
         
-        // Comprehensive live TV filtering
-        // Channels in Xtream lists usually have a specific pattern and lack VOD extensions
-        const isLive = 
-          group.includes('ao vivo') || 
-          group.includes('live') || 
-          group.includes('canais') || 
-          group.includes('abertos') || 
-          group.includes('24h') ||
-          group.includes('variedades') ||
-          group.includes('esportes') ||
-          group.includes('noticias') ||
-          name.includes('ao vivo') ||
-          name.includes('full hd') ||
-          name.includes(' (h265)') ||
-          (url.includes(':') && !url.includes('/movie/') && !url.includes('/series/') && !url.includes('.mp4') && !url.includes('.mkv') && !url.includes('.avi'));
-
-        // Xtream API links for VOD are very specific
+        // Xtream API links for VOD are very specific and contain these identifiers
         const isVod = url.includes('/movie/') || url.includes('/series/') || url.includes('.mp4') || url.includes('.mkv') || url.includes('.avi');
         
-        // Strict requirement: Only movies and series
-        if (isVod) return true;
-        
-        return !isLive;
+        // If it's VOD, we keep it. If it's a channel (usually /live/), we discard it.
+        return isVod;
       });
     } catch (e) {
       console.error("Failed to fetch M3U:", e);
