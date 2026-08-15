@@ -129,7 +129,7 @@ function TitlePage() {
                       Versões disponíveis
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {item.variants!.map((v) => (
+                      {item.variants!.map((v: { label: string; url: string; compatible: boolean }) => (
                         <button
                           key={v.url}
                           onClick={() => setSelectedEpisode({ name: v.label, url: v.url })}
