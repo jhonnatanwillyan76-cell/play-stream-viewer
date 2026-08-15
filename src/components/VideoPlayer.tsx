@@ -117,6 +117,8 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
 
       <video
         ref={videoRef}
+        autoPlay
+        playsInline
         controls
         className="w-full h-full"
         poster={poster}
