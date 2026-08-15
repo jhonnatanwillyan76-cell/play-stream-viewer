@@ -27,11 +27,11 @@ export const Route = createFileRoute("/search")({
   loaderDeps: ({ search }) => ({ q: search.q }),
   loader: ({ context, deps }) =>
     context.queryClient.ensureQueryData(searchQuery(deps.q)),
-  head: ({ search }) => ({
+  head: ({ loaderDeps }) => ({
     meta: [
       {
-        title: search.q
-          ? `Busca: ${search.q} — Maré TV`
+        title: loaderDeps.q
+          ? `Busca: ${loaderDeps.q} — Maré TV`
           : "Buscar — Maré TV",
       },
     ],
