@@ -9,7 +9,7 @@ const titleQuery = (slug: string) =>
     queryKey: ["title", slug],
     queryFn: async () => {
       const all = await listM3U();
-      const item = all.find((it) => it.slug === slug);
+      const item = all.find((it: M3UItem) => it.slug === slug);
       if (!item) throw new Error("Conteúdo não encontrado");
       return item;
     },
