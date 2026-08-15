@@ -3,7 +3,8 @@ import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { listM3U, type M3UItem } from "@/lib/m3u.functions";
 import { SiteHeader } from "@/components/SiteHeader";
 import { GlobalLoadingIndicator } from "@/components/GlobalLoadingIndicator";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
+import { VideoPlayer } from "@/components/VideoPlayer";
 
 const titleQuery = (slug: string) =>
   queryOptions({
@@ -113,23 +114,12 @@ function TitlePage() {
                   </button>
                 </div>
                 
-                <div 
-                  ref={playerRef}
-                  className="relative aspect-video w-full overflow-hidden rounded-2xl bg-black ring-1 ring-border shadow-2xl group"
-                >
-                  <video 
+                <div ref={playerRef} className="w-full">
+                  <VideoPlayer 
                     src={selectedEpisode.url}
-                    controls
-                    className="w-full h-full"
                     poster={item.logo}
-                  >
-                    Seu navegador não suporta o player de vídeo.
-                  </video>
-                  
-                  {/* Overlay for branding/protection if needed */}
-                  <div className="absolute top-4 right-4 pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity">
-                    <span className="text-primary font-black title-cinematic text-xl italic tracking-tighter">MARÉ TV</span>
-                  </div>
+                    branding="MARÉ TV"
+                  />
                 </div>
               </div>
             ) : (
