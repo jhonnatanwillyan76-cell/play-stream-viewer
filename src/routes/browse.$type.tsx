@@ -116,9 +116,13 @@ function M3UCard({ item }: { item: M3UItem }) {
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
         <p className="text-[10px] text-white/70 mb-2 line-clamp-2 font-medium">{item.name}</p>
-        <a href={item.url} target="_blank" rel="noopener noreferrer" className="w-full py-2 bg-primary text-primary-foreground text-center rounded-lg font-bold text-xs uppercase tracking-wider hover:scale-105 transition-transform">
-          ▶ Assistir
-        </a>
+        <Link 
+          to="/title/$type/$slug"
+          params={{ type: item.type === 'movie' ? 'movie' : 'series', slug: item.slug }}
+          className="w-full py-2 bg-primary text-primary-foreground text-center rounded-lg font-bold text-xs uppercase tracking-wider hover:scale-105 transition-transform"
+        >
+          ▶ {item.type === 'movie' ? 'Assistir' : 'Ver Episódios'}
+        </Link>
       </div>
     </div>
   );
