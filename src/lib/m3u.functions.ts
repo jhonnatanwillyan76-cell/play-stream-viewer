@@ -120,14 +120,11 @@ async function getCachedData() {
   
   try {
     const fs = await import('fs/promises');
-    const stats = await fs.stat(CACHE_FILE);
-    if (Date.now() - stats.mtimeMs < CACHE_TTL) {
-      const data = JSON.parse(await fs.readFile(CACHE_FILE, 'utf-8'));
-      memoryCache = { data, timestamp: stats.mtimeMs };
-      return data;
-    }
+    const data = JSON.parse(await fs.readFile(CACHE_FILE, 'utf-8'));
+    memoryCache = { data, timestamp: Date.now() }; // Treat as fresh in memory for this session
+    return data;
   } catch (e) {
-    // Cache file doesn't exist or is invalid
+    console.error('getCachedData error:', e);
   }
   return null;
 }
