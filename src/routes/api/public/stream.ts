@@ -56,11 +56,14 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
     outHeaders.set('Access-Control-Allow-Headers', '*')
     outHeaders.set('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges')
     
+    // Explicitly set content-type if missing or incorrect for common formats
     if (parsed.pathname.endsWith('.ts')) {
       outHeaders.set('content-type', 'video/mp2t')
+    } else if (parsed.pathname.endsWith('.mp4')) {
+      outHeaders.set('content-type', 'video/mp4')
     }
 
-    // Handle range response status
+    // Return the response with the exact status code from upstream (crucial for 206 Partial Content)
     return new Response(method === 'HEAD' ? null : upstream.body, {
       status: upstream.status,
       headers: outHeaders,
