@@ -16,7 +16,8 @@ const searchQuery = (q: string) =>
       const lower = q.toLowerCase();
       return items.filter(it => 
         it.name.toLowerCase().includes(lower) || 
-        it.group?.toLowerCase().includes(lower)
+        it.group?.toLowerCase().includes(lower) ||
+        it.url.toLowerCase().includes(lower)
       );
     },
     staleTime: 5 * 60 * 1000,
