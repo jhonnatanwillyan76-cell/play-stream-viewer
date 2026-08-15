@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { listHome, type CardItem } from "@/lib/bludv.functions";
 import { listM3U } from "@/lib/m3u.functions";
 import { SiteHeader } from "@/components/SiteHeader";
 import { PosterCard } from "@/components/PosterCard";
@@ -8,8 +7,10 @@ import { PosterCard } from "@/components/PosterCard";
 const homeQuery = queryOptions({
   queryKey: ["home"],
   queryFn: async () => {
-    const [bludv, m3u] = await Promise.all([listHome(), listM3U()]);
-    return { ...bludv, m3u };
+    const m3u = await listM3U();
+    const filmes = m3u.filter(i => i.type === 'movie');
+    const series = m3u.filter(i => i.type === 'series');
+    return { filmes, series, m3u };
   },
   staleTime: 5 * 60 * 1000,
 });
@@ -105,23 +106,6 @@ function Hero({ item }: { item: CardItem }) {
   );
 }
 
-function Row({ title, items, moreTo }: { title: string; items: CardItem[]; moreTo: string }) {
-  return (
-    <section>
-      <div className="flex items-end justify-between mb-4">
-        <h2 className="text-xl sm:text-2xl font-bold tracking-tight">{title}</h2>
-        <Link to={moreTo} className="text-sm text-primary hover:underline">
-          Ver tudo →
-        </Link>
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        {items.slice(0, 12).map((it) => (
-          <PosterCard key={`${it.type}-${it.slug}`} item={it} />
-        ))}
-      </div>
-    </section>
-  );
-}
 
 function M3URow({ title, items }: { title: string; items: any[] }) {
   return (
