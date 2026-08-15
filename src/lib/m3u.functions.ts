@@ -25,8 +25,37 @@ function slugify(text: string) {
     .replace(/^-+|-+$/g, '');
 }
 
+function getQualityScore(name: string): number {
+  const n = name.toLowerCase();
+  if (n.includes('4k') || n.includes('uhd')) return 100;
+  if (n.includes('2160p')) return 90;
+  if (n.includes('1080p') || n.includes('fhd') || n.includes('bluray')) return 80;
+  if (n.includes('720p') || n.includes('hd')) return 60;
+  if (n.includes('hdtv')) return 50;
+  if (n.includes('cam') || n.includes('ts') || n.includes('hc')) return 10;
+  return 40; // Default
+}
+
+function cleanMovieName(name: string): string {
+  return name
+    .replace(/\d{3,4}p/gi, '')
+    .replace(/4k|uhd|fhd|hd|bluray|brrip|webrip|web-dl|hdtv|cam|ts|hc/gi, '')
+    .replace(/\[.*?\]|\(.*?\)/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function upgradeLogoQuality(logo?: string): string | undefined {
+  if (!logo) return undefined;
+  // Upgrade TMDB resolution from w300/w600/etc to original or w780
+  if (logo.includes('tmdb.org')) {
+    return logo.replace(/\/t\/p\/w\d+(_and_h\d+(_bestv2)?)?/, '/t/p/original');
+  }
+  return logo;
+}
+
 function parseM3U(content: string): M3UItem[] {
-  const items: M3UItem[] = [];
+  const movieMap = new Map<string, M3UItem & { quality: number }>();
   const seriesMap = new Map<string, M3UItem>();
   const lines = content.split('\n');
   let currentItem: Partial<M3UItem> & { rawName?: string } | null = null;
@@ -46,7 +75,7 @@ function parseM3U(content: string): M3UItem[] {
       currentItem = {
         name: rawName,
         rawName: rawName,
-        logo: logoMatch ? logoMatch[1] : undefined,
+        logo: upgradeLogoQuality(logoMatch ? logoMatch[1] : undefined),
         group: groupMatch ? groupMatch[1] : undefined,
         type: 'movie'
       };
@@ -54,33 +83,25 @@ function parseM3U(content: string): M3UItem[] {
       const group = (currentItem.group || "").toLowerCase();
       const name = (currentItem.name || "").toLowerCase();
       
-      // Detecção de série mais rigorosa para evitar filmes nas séries
       const seriesMarkers = ['serie', 'episodio', 'season', 'temporada', ' s0', ' e0', ' s1', ' e1', ' s2', ' e2', ' s3', ' e3'];
       const isSeries = seriesMarkers.some(m => group.includes(m) || name.includes(m));
       
       currentItem.type = isSeries ? 'series' : 'movie';
-      
-      // Priorizar marcações explícitas da URL se disponíveis
-      // Mas o loop INFINF ainda não tem a URL aqui. A URL vem na próxima linha.
-      // Vamos ajustar a lógica no bloco 'else if (line.startsWith('http'))'
     } else if (line.startsWith('http') && currentItem) {
       currentItem.url = line;
       const url = line.toLowerCase();
       
-      // Correção final baseada na URL
       if (url.includes('/movie/')) currentItem.type = 'movie';
       else if (url.includes('/series/')) currentItem.type = 'series';
       
       if (currentItem.type === 'series') {
-        // Tentar limpar o nome da série removendo marcações de episódios
-        // Ex: "The Boys S01 E01" -> "The Boys"
         let baseName = currentItem.name!
-          .replace(/[Ss]\d+[Ee]\d+/g, '') // S01E01
-          .replace(/[Ss]eason\s*\d+/gi, '') // Season 1
-          .replace(/[Tt]emporada\s*\d+/gi, '') // Temporada 1
-          .replace(/[Ee]p\.\s*\d+/gi, '') // Ep. 1
-          .replace(/[Ee]pis[óo]dio\s*\d+/gi, '') // Episodio 1
-          .replace(/[\(\[].*?[\)\]]/g, '') // (Legendado), [Dublado]
+          .replace(/[Ss]\d+[Ee]\d+/g, '')
+          .replace(/[Ss]eason\s*\d+/gi, '')
+          .replace(/[Tt]emporada\s*\d+/gi, '')
+          .replace(/[Ee]p\.\s*\d+/gi, '')
+          .replace(/[Ee]pis[óo]dio\s*\d+/gi, '')
+          .replace(/[\(\[].*?[\)\]]/g, '')
           .replace(/\s+/g, ' ')
           .trim();
 
@@ -100,14 +121,24 @@ function parseM3U(content: string): M3UItem[] {
           seriesMap.set(slug, newItem);
         }
       } else {
-        const slug = slugify(currentItem.name!);
-        items.push({ ...currentItem, slug } as M3UItem);
+        const cleanedName = cleanMovieName(currentItem.name!);
+        const slug = slugify(cleanedName || currentItem.name!);
+        const quality = getQualityScore(currentItem.name!);
+
+        if (movieMap.has(slug)) {
+          const existing = movieMap.get(slug)!;
+          if (quality > existing.quality) {
+            movieMap.set(slug, { ...currentItem, name: cleanedName, slug, quality } as M3UItem & { quality: number });
+          }
+        } else {
+          movieMap.set(slug, { ...currentItem, name: cleanedName, slug, quality } as M3UItem & { quality: number });
+        }
       }
       currentItem = null;
     }
   }
   
-  return [...items, ...Array.from(seriesMap.values())];
+  return [...Array.from(movieMap.values()).map(({quality, ...rest}) => rest), ...Array.from(seriesMap.values())];
 }
 
 let memoryCache: { data: M3UItem[], timestamp: number } | null = null;
@@ -162,7 +193,7 @@ export const listM3U = createServerFn({ method: "GET" })
         const stale = await getCachedData();
         if (stale) {
           console.log('Serving STALE data due to LIMIT_REACHED');
-          return stale;
+        return stale.sort((a: M3UItem, b: M3UItem) => a.name.localeCompare(b.name, undefined, { numeric: true }));
         }
         throw new Error('LIMIT_REACHED');
       }
@@ -190,13 +221,13 @@ export const listM3U = createServerFn({ method: "GET" })
       if (filteredItems.length > 0) {
         await setCachedData(filteredItems);
       }
-      return filteredItems;
+      return filteredItems.sort((a: M3UItem, b: M3UItem) => a.name.localeCompare(b.name, undefined, { numeric: true }));
     } catch (e) {
       console.error('SERVER FN ERROR:', e);
       const stale = await getCachedData();
       if (stale) {
         console.log('Serving STALE data from cache due to error');
-        return stale;
+        return stale.sort((a: M3UItem, b: M3UItem) => a.name.localeCompare(b.name, undefined, { numeric: true }));
       }
       return [];
     }

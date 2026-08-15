@@ -8,8 +8,8 @@ const homeQuery = queryOptions({
   queryKey: ["home"],
   queryFn: async () => {
     const m3u = await listM3U();
-    const filmes = m3u.filter((i: M3UItem) => i.type === 'movie').sort((a: M3UItem, b: M3UItem) => a.name.localeCompare(b.name, undefined, { numeric: true }));
-    const series = m3u.filter((i: M3UItem) => i.type === 'series').sort((a: M3UItem, b: M3UItem) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+    const filmes = m3u.filter((i: M3UItem) => i.type === 'movie');
+    const series = m3u.filter((i: M3UItem) => i.type === 'series');
     return { filmes, series, m3u };
   },
   staleTime: 60 * 60 * 1000, // 1 hour stale time for UI

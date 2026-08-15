@@ -6,6 +6,8 @@ export const Route = createFileRoute('/api/public/m3u')({
     handlers: {
       GET: async () => {
         try {
+          // Force a fresh parse by bypassing cache check in this debug endpoint if needed
+          // but here we just want to see the current processed state
           const items = await listM3U()
           return new Response(JSON.stringify(items), {
             headers: {
