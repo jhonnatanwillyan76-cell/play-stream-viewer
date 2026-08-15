@@ -36,17 +36,22 @@ function TitlePage() {
     return (
       <div className="min-h-screen bg-background text-foreground">
         <SiteHeader />
-        <main className="mx-auto max-w-3xl px-4 py-24 text-center space-y-4">
-          <h1 className="text-3xl font-black title-cinematic">Conteúdo indisponível</h1>
-          <p className="text-muted-foreground">
-            Este título não está mais na lista atual ou o catálogo ainda está carregando.
+        <main className="mx-auto max-w-3xl px-4 py-24 text-center space-y-6">
+          <div className="inline-flex h-24 w-24 items-center justify-center rounded-full bg-destructive/10 text-destructive mb-4 animate-pulse">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <h1 className="text-4xl font-black title-cinematic tracking-tighter">Título não encontrado</h1>
+          <p className="text-muted-foreground text-lg max-w-md mx-auto leading-relaxed">
+            O conteúdo que você procura não está disponível na lista atual ou o link expirou. Tente buscar novamente na página inicial.
           </p>
-          <Link
-            to="/"
-            className="inline-block mt-4 px-8 py-3 bg-primary text-primary-foreground rounded-full font-bold"
-          >
-            Voltar ao início
-          </Link>
+          <div className="pt-6">
+            <Link
+              to="/"
+              className="px-10 py-4 bg-primary text-primary-foreground rounded-full font-bold text-lg hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20"
+            >
+              Voltar ao Início
+            </Link>
+          </div>
         </main>
       </div>
     );
