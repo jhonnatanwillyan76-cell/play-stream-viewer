@@ -14,12 +14,16 @@ const searchQuery = (q: string) =>
       const items = await listM3U();
       if (!q) return [];
       const lower = q.toLowerCase();
+      
+      // Filter the already parsed M3U items based on the search term
       return items.filter(it => 
         it.name.toLowerCase().includes(lower) || 
-        it.group?.toLowerCase().includes(lower)
+        it.group?.toLowerCase().includes(lower) ||
+        it.url.toLowerCase().includes(lower)
       );
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000, // Sync with index staleTime
+    gcTime: 60 * 1000,
   });
 
 export const Route = createFileRoute("/search")({

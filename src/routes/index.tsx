@@ -7,8 +7,8 @@ const homeQuery = queryOptions({
   queryKey: ["home"],
   queryFn: async () => {
     const m3u = await listM3U();
-    const filmes = m3u.filter(i => i.type === 'movie');
-    const series = m3u.filter(i => i.type === 'series');
+    const filmes = m3u.filter(i => i.type === 'movie').sort((a, b) => b.name.localeCompare(a.name));
+    const series = m3u.filter(i => i.type === 'series').sort((a, b) => b.name.localeCompare(a.name));
     return { filmes, series, m3u };
   },
   staleTime: 30 * 1000, // Reduced staleTime to help with limit issues

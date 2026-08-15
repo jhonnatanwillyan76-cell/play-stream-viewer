@@ -32,9 +32,21 @@ function parseM3U(content: string): M3UItem[] {
       };
 
       const group = currentItem.group?.toLowerCase() || "";
-      if (group.includes('serie') || group.includes('episodio') || group.includes('season') || group.includes('temporada')) {
+      const name = currentItem.name?.toLowerCase() || "";
+      
+      // Smart detection for types
+      const isSeries = group.includes('serie') || group.includes('episodio') || group.includes('season') || group.includes('temporada') || group.includes('multi');
+      const isMovie = group.includes('filme') || group.includes('movie') || group.includes('cinema') || group.includes('vod');
+      
+      if (isSeries) {
         currentItem.type = 'series';
+      } else if (isMovie) {
+        currentItem.type = 'movie';
       }
+      
+      // Sometimes type is in the URL or tvg-name (Xtream API structure)
+      if (line.includes('movie') || tvgNameMatch?.[1].toLowerCase().includes('movie')) currentItem.type = 'movie';
+      if (line.includes('series') || tvgNameMatch?.[1].toLowerCase().includes('series')) currentItem.type = 'series';
     } else if (line.startsWith('http') && currentItem) {
       currentItem.url = line;
       items.push(currentItem as M3UItem);
@@ -69,11 +81,13 @@ export const listM3U = createServerFn({ method: "GET" })
       // Filter to only include movies and series, excluding live TV channels if any
       // Usually M3U lists from providers have specific group names for VOD
       return allItems.filter(item => {
-        const group = item.group?.toLowerCase() || "";
-        // Keep items that look like movies or series (VOD)
-        // Common M3U tags for live TV usually don't have these, but we'll be inclusive of what looks like VOD
-        const isLive = group.includes('ao vivo') || group.includes('live') || group.includes('canais');
-        return !isLive;
+        const url = item.url.toLowerCase();
+        
+        // Xtream API links for VOD are very specific and contain these identifiers
+        const isVod = url.includes('/movie/') || url.includes('/series/') || url.includes('.mp4') || url.includes('.mkv') || url.includes('.avi');
+        
+        // If it's VOD, we keep it. If it's a channel (usually /live/), we discard it.
+        return isVod;
       });
     } catch (e) {
       console.error("Failed to fetch M3U:", e);
