@@ -9,7 +9,7 @@ const titleQuery = (slug: string) =>
     queryKey: ["title", slug],
     queryFn: async () => {
       const all = await listM3U();
-      const item = all.find((it) => it.slug === slug);
+      const item = all.find((it: M3UItem) => it.slug === slug);
       if (!item) throw new Error("Conteúdo não encontrado");
       return item;
     },
@@ -123,7 +123,7 @@ function TitlePage() {
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                  {item.episodes.map((ep, idx) => (
+                  {item.episodes.map((ep: { name: string; url: string }, idx: number) => (
                     <button
                       key={idx}
                       onClick={() => {

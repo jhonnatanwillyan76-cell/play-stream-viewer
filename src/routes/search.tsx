@@ -16,7 +16,7 @@ const searchQuery = (q: string) =>
       const lower = q.toLowerCase();
       
       // Filter the already parsed M3U items based on the search term
-      return items.filter(it => 
+      return items.filter((it: M3UItem) => 
         it.name.toLowerCase().includes(lower) || 
         it.group?.toLowerCase().includes(lower) ||
         it.url.toLowerCase().includes(lower)
@@ -95,7 +95,7 @@ function SearchPage() {
         ) : (
           <section className="mt-8">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {items.map((it, idx) => (
+              {items.map((it: M3UItem, idx: number) => (
                 <M3UCard key={idx} item={it} />
               ))}
             </div>

@@ -11,7 +11,7 @@ const archiveQuery = (type: "movie" | "series", page: number) =>
     queryKey: ["archive-m3u", type, page],
     queryFn: async () => {
       const all = await listM3U();
-      const filtered = all.filter(it => it.type === type);
+      const filtered = all.filter((it: M3UItem) => it.type === type);
       const pageSize = 24;
       const start = (page - 1) * pageSize;
       return {
@@ -70,7 +70,7 @@ function BrowsePage() {
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {data.items.map((it, idx) => (
+            {data.items.map((it: M3UItem, idx: number) => (
               <M3UCard key={idx} item={it} />
             ))}
           </div>

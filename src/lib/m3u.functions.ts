@@ -103,28 +103,58 @@ function parseM3U(content: string): M3UItem[] {
 }
 
 let memoryCache: { data: M3UItem[], timestamp: number } | null = null;
+const CACHE_FILE = '/tmp/m3u_cache.json';
+
+async function getCachedData() {
+  if (memoryCache && (Date.now() - memoryCache.timestamp < CACHE_TTL)) {
+    return memoryCache.data;
+  }
+  
+  try {
+    const fs = await import('fs/promises');
+    const stats = await fs.stat(CACHE_FILE);
+    if (Date.now() - stats.mtimeMs < CACHE_TTL) {
+      const data = JSON.parse(await fs.readFile(CACHE_FILE, 'utf-8'));
+      memoryCache = { data, timestamp: stats.mtimeMs };
+      return data;
+    }
+  } catch (e) {
+    // Cache file doesn't exist or is invalid
+  }
+  return null;
+}
+
+async function setCachedData(data: M3UItem[]) {
+  memoryCache = { data, timestamp: Date.now() };
+  try {
+    const fs = await import('fs/promises');
+    await fs.writeFile(CACHE_FILE, JSON.stringify(data));
+  } catch (e) {
+    console.error('Failed to write M3U cache file', e);
+  }
+}
 
 export const listM3U = createServerFn({ method: "GET" })
   .handler(async () => {
     const url = process.env['M3U_URL'] || M3U_URL;
     
-    if (memoryCache && (Date.now() - memoryCache.timestamp < CACHE_TTL)) {
-      return memoryCache.data;
-    }
+    const cached = await getCachedData();
+    if (cached) return cached;
 
     try {
       const res = await fetch(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         },
-        signal: AbortSignal.timeout(20000)
+        signal: AbortSignal.timeout(30000)
       });
       
       if (!res.ok) throw new Error(`Fetch M3U failed`);
       const text = await res.text();
       
       if (text.includes('DOWNLOAD_LIMIT_REACHED')) {
-        if (memoryCache) return memoryCache.data;
+        const stale = await getCachedData();
+        if (stale) return stale;
         throw new Error('LIMIT_REACHED');
       }
       
@@ -134,22 +164,19 @@ export const listM3U = createServerFn({ method: "GET" })
         return (url.includes('/movie/') || url.includes('/series/') || url.includes('.mp4') || url.includes('.mkv')) && !url.includes('/live/');
       });
 
-      // Sort episodes for series
       filteredItems.forEach(item => {
         if (item.type === 'series' && item.episodes) {
-          item.episodes.sort((a, b) => {
-            // Natural sort attempt
-            return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
-          });
+          item.episodes.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
         }
       });
 
       if (filteredItems.length > 0) {
-        memoryCache = { data: filteredItems, timestamp: Date.now() };
+        await setCachedData(filteredItems);
       }
       return filteredItems;
     } catch (e) {
-      if (memoryCache) return memoryCache.data;
+      const stale = await getCachedData();
+      if (stale) return stale;
       return [];
     }
   });
