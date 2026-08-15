@@ -46,7 +46,7 @@ function Home() {
           <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-destructive/10 text-destructive mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           </div>
-          <h1 className="text-3xl font-black title-cinematic">Catálogo Indisponível</h1>
+          <h1 className="text-3xl font-black title-cinematic">Catálogo Indisponível (Limite do Provedor)</h1>
           <p className="text-muted-foreground max-w-md mx-auto">
             A lista M3U não pôde ser carregada ou está vazia no momento. Isso pode ser devido ao limite de conexões simultâneas do provedor.
           </p>
