@@ -180,7 +180,7 @@ function parseM3U(content: string): M3UItem[] {
 }
 
 let memoryCache: { data: M3UItem[], timestamp: number } | null = null;
-const CACHE_FILE = '/tmp/m3u_cache.json';
+const CACHE_FILE = '/tmp/m3u_cache_v2.json';
 
 async function getCachedData() {
   if (memoryCache && (Date.now() - memoryCache.timestamp < CACHE_TTL)) {
