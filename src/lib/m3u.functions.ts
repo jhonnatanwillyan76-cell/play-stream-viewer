@@ -82,9 +82,27 @@ export const listM3U = createServerFn({ method: "GET" })
       // Usually M3U lists from providers have specific group names for VOD
       return allItems.filter(item => {
         const group = item.group?.toLowerCase() || "";
-        // Keep items that look like movies or series (VOD)
-        // Common M3U tags for live TV usually don't have these, but we'll be inclusive of what looks like VOD
-        const isLive = group.includes('ao vivo') || group.includes('live') || group.includes('canais');
+        const name = item.name?.toLowerCase() || "";
+        
+        // Comprehensive live TV filtering
+        const isLive = 
+          group.includes('ao vivo') || 
+          group.includes('live') || 
+          group.includes('canais') || 
+          group.includes('tv abertos') || 
+          group.includes('24h') ||
+          group.includes('variedades') ||
+          group.includes('esportes') ||
+          group.includes('noticias') ||
+          group.includes('filmes e series') || // Some lists use this for channels
+          name.includes('ao vivo');
+
+        // Xtream API links for live usually look different from VOD
+        const looksLikeVod = item.url.includes('/movie/') || item.url.includes('/series/') || item.url.includes('.mp4') || item.url.includes('.mkv');
+        
+        // If it looks like VOD, keep it even if group filter is aggressive
+        if (looksLikeVod) return true;
+        
         return !isLive;
       });
     } catch (e) {
