@@ -20,11 +20,12 @@ function parseM3U(content: string): M3UItem[] {
     line = line.trim();
     if (line.startsWith('#EXTINF:')) {
       const nameMatch = line.match(/,(.+)$/);
-      const logoMatch = line.match(/tvg-logo="([^"]+)"/);
-      const groupMatch = line.match(/group-title="([^"]+)"/);
+      const logoMatch = line.match(/tvg-logo="([^"]+)"/i);
+      const groupMatch = line.match(/group-title="([^"]+)"/i);
+      const tvgNameMatch = line.match(/tvg-name="([^"]+)"/i);
       
       currentItem = {
-        name: nameMatch ? nameMatch[1].trim() : "Sem nome",
+        name: nameMatch ? nameMatch[1].trim() : (tvgNameMatch ? tvgNameMatch[1].trim() : "Sem nome"),
         logo: logoMatch ? logoMatch[1] : undefined,
         group: groupMatch ? groupMatch[1] : undefined,
         type: 'movie'
@@ -49,9 +50,20 @@ export const listM3U = createServerFn({ method: "GET" })
     const url = process.env['M3U_URL'] || M3U_URL;
     
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': '*/*',
+          'Connection': 'keep-alive'
+        }
+      });
       if (!res.ok) throw new Error(`Fetch M3U failed: ${res.status}`);
       const text = await res.text();
+      
+      if (text.includes('DOWNLOAD_LIMIT_REACHED')) {
+        throw new Error('Limite de download simultâneo atingido na lista M3U. Tente novamente em instantes.');
+      }
+      
       const allItems = parseM3U(text);
       
       // Filter to only include movies and series, excluding live TV channels if any

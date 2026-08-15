@@ -11,7 +11,8 @@ const homeQuery = queryOptions({
     const series = m3u.filter(i => i.type === 'series');
     return { filmes, series, m3u };
   },
-  staleTime: 5 * 60 * 1000,
+  staleTime: 30 * 1000, // Reduced staleTime to help with limit issues
+  gcTime: 60 * 1000,
 });
 
 export const Route = createFileRoute("/")({
@@ -33,8 +34,32 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
-  const { data } = useSuspenseQuery(homeQuery);
-  const featured = data.m3u[0];
+  const { data, error } = useSuspenseQuery(homeQuery);
+  const featured = data?.m3u?.[0];
+
+  if (!data || data.m3u.length === 0) {
+    return (
+      <div className="min-h-screen">
+        <SiteHeader />
+        <main className="mx-auto max-w-7xl px-4 py-20 text-center space-y-4">
+          <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-destructive/10 text-destructive mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <h1 className="text-3xl font-black title-cinematic">Catálogo Indisponível</h1>
+          <p className="text-muted-foreground max-w-md mx-auto">
+            A lista M3U não pôde ser carregada ou está vazia no momento. Isso pode ser devido ao limite de conexões simultâneas do provedor.
+          </p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-6 px-8 py-3 bg-primary text-primary-foreground rounded-full font-bold hover:scale-105 transition-transform"
+          >
+            Tentar Novamente
+          </button>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -43,11 +68,6 @@ function Home() {
       <main className="mx-auto max-w-7xl px-4 sm:px-6 py-10 space-y-14">
         {data.filmes.length > 0 && <M3URow title="Filmes da Lista" items={data.filmes} />}
         {data.series.length > 0 && <M3URow title="Séries da Lista" items={data.series} />}
-        {!data.m3u.length && (
-          <div className="text-center py-20 text-muted-foreground">
-            Nenhum conteúdo encontrado na lista M3U.
-          </div>
-        )}
       </main>
       <Footer />
     </div>
@@ -112,7 +132,7 @@ function M3URow({ title, items }: { title: string; items: M3UItem[] }) {
         <h2 className="text-xl sm:text-2xl font-bold tracking-tight">{title}</h2>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        {items.slice(0, 18).map((it, idx) => (
+        {items.slice(0, 48).map((it, idx) => (
           <div key={idx} className="group relative aspect-[2/3] overflow-hidden rounded-xl bg-secondary ring-1 ring-border transition-all hover:ring-primary/60">
             {it.logo ? (
               <img src={it.logo} alt={it.name} className="h-full w-full object-cover" />

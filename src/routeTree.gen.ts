@@ -13,6 +13,7 @@ import { Route as SearchRouteImport } from './routes/search'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BrowseTypeRouteImport } from './routes/browse.$type'
 import { Route as TitleTypeSlugRouteImport } from './routes/title.$type.$slug'
+import { Route as ApiPublicM3uRouteImport } from './routes/api/public/m3u'
 
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
@@ -34,17 +35,24 @@ const TitleTypeSlugRoute = TitleTypeSlugRouteImport.update({
   path: '/title/$type/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicM3uRoute = ApiPublicM3uRouteImport.update({
+  id: '/api/public/m3u',
+  path: '/api/public/m3u',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/search': typeof SearchRoute
   '/browse/$type': typeof BrowseTypeRoute
+  '/api/public/m3u': typeof ApiPublicM3uRoute
   '/title/$type/$slug': typeof TitleTypeSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/search': typeof SearchRoute
   '/browse/$type': typeof BrowseTypeRoute
+  '/api/public/m3u': typeof ApiPublicM3uRoute
   '/title/$type/$slug': typeof TitleTypeSlugRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,38 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/search': typeof SearchRoute
   '/browse/$type': typeof BrowseTypeRoute
+  '/api/public/m3u': typeof ApiPublicM3uRoute
   '/title/$type/$slug': typeof TitleTypeSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/search' | '/browse/$type' | '/title/$type/$slug'
+  fullPaths:
+    | '/'
+    | '/search'
+    | '/browse/$type'
+    | '/api/public/m3u'
+    | '/title/$type/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/search' | '/browse/$type' | '/title/$type/$slug'
-  id: '__root__' | '/' | '/search' | '/browse/$type' | '/title/$type/$slug'
+  to:
+    | '/'
+    | '/search'
+    | '/browse/$type'
+    | '/api/public/m3u'
+    | '/title/$type/$slug'
+  id:
+    | '__root__'
+    | '/'
+    | '/search'
+    | '/browse/$type'
+    | '/api/public/m3u'
+    | '/title/$type/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SearchRoute: typeof SearchRoute
   BrowseTypeRoute: typeof BrowseTypeRoute
+  ApiPublicM3uRoute: typeof ApiPublicM3uRoute
   TitleTypeSlugRoute: typeof TitleTypeSlugRoute
 }
 
@@ -99,6 +125,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TitleTypeSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/m3u': {
+      id: '/api/public/m3u'
+      path: '/api/public/m3u'
+      fullPath: '/api/public/m3u'
+      preLoaderRoute: typeof ApiPublicM3uRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -106,6 +139,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SearchRoute: SearchRoute,
   BrowseTypeRoute: BrowseTypeRoute,
+  ApiPublicM3uRoute: ApiPublicM3uRoute,
   TitleTypeSlugRoute: TitleTypeSlugRoute,
 }
 export const routeTree = rootRouteImport
