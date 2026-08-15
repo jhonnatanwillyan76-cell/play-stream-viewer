@@ -16,37 +16,44 @@ function parseM3U(content: string): M3UItem[] {
   
   let currentItem: Partial<M3UItem> | null = null;
   
+  console.log("Parsing M3U content, lines:", lines.length);
+
   for (let line of lines) {
     line = line.trim();
+    if (!line) continue;
+
     if (line.startsWith('#EXTINF:')) {
       const nameMatch = line.match(/,(.+)$/);
       const logoMatch = line.match(/tvg-logo="([^"]+)"/i);
       const groupMatch = line.match(/group-title="([^"]+)"/i);
       const tvgNameMatch = line.match(/tvg-name="([^"]+)"/i);
       
+      const rawName = nameMatch ? nameMatch[1].trim() : (tvgNameMatch ? tvgNameMatch[1].trim() : "Sem nome");
+      
       currentItem = {
-        name: nameMatch ? nameMatch[1].trim() : (tvgNameMatch ? tvgNameMatch[1].trim() : "Sem nome"),
+        name: rawName,
         logo: logoMatch ? logoMatch[1] : undefined,
         group: groupMatch ? groupMatch[1] : undefined,
         type: 'movie'
       };
 
-      const group = currentItem.group?.toLowerCase() || "";
-      const name = currentItem.name?.toLowerCase() || "";
+      const group = (currentItem.group || "").toLowerCase();
+      const name = (currentItem.name || "").toLowerCase();
       
-      // Smart detection for types
-      const isSeries = group.includes('serie') || group.includes('episodio') || group.includes('season') || group.includes('temporada') || group.includes('multi');
-      const isMovie = group.includes('filme') || group.includes('movie') || group.includes('cinema') || group.includes('vod');
+      // Better series detection: check for season/episode markers in name too
+      const seriesMarkers = ['serie', 'episodio', 'season', 'temporada', 'multi', 's0', 'e0', 's1', 'e1'];
+      const isSeries = seriesMarkers.some(m => group.includes(m) || name.includes(m));
       
       if (isSeries) {
         currentItem.type = 'series';
-      } else if (isMovie) {
+      } else {
         currentItem.type = 'movie';
       }
       
-      // Sometimes type is in the URL or tvg-name (Xtream API structure)
-      if (line.includes('movie') || tvgNameMatch?.[1].toLowerCase().includes('movie')) currentItem.type = 'movie';
-      if (line.includes('series') || tvgNameMatch?.[1].toLowerCase().includes('series')) currentItem.type = 'series';
+      // Override if specific markers found in line
+      if (line.toLowerCase().includes('movie')) currentItem.type = 'movie';
+      if (line.toLowerCase().includes('series')) currentItem.type = 'series';
+
     } else if (line.startsWith('http') && currentItem) {
       currentItem.url = line;
       items.push(currentItem as M3UItem);
@@ -54,6 +61,7 @@ function parseM3U(content: string): M3UItem[] {
     }
   }
   
+  console.log("Parsed total items:", items.length);
   return items;
 }
 
@@ -83,11 +91,21 @@ export const listM3U = createServerFn({ method: "GET" })
       return allItems.filter(item => {
         const url = item.url.toLowerCase();
         
-        // Xtream API links for VOD are very specific and contain these identifiers
-        const isVod = url.includes('/movie/') || url.includes('/series/') || url.includes('.mp4') || url.includes('.mkv') || url.includes('.avi');
+        // XTREAM API and standard M3U links for VOD
+        // Channels usually look like: /live/user/pass/ID.ts
+        // Movies usually look like: /movie/user/pass/ID.mp4
+        // Series usually look like: /series/user/pass/ID.mp4
         
-        // If it's VOD, we keep it. If it's a channel (usually /live/), we discard it.
-        return isVod;
+        const isMovieLink = url.includes('/movie/');
+        const isSeriesLink = url.includes('/series/');
+        const hasVideoExt = url.includes('.mp4') || url.includes('.mkv') || url.includes('.avi');
+        const isLive = url.includes('/live/');
+        
+        // If it explicitly says live, it's a channel
+        if (isLive) return false;
+        
+        // If it's a direct movie/series path or has video extension, it's VOD
+        return isMovieLink || isSeriesLink || hasVideoExt;
       });
     } catch (e) {
       console.error("Failed to fetch M3U:", e);
