@@ -11,7 +11,8 @@ const homeQuery = queryOptions({
     const series = m3u.filter(i => i.type === 'series');
     return { filmes, series, m3u };
   },
-  staleTime: 5 * 60 * 1000,
+  staleTime: 30 * 1000, // Reduced staleTime to help with limit issues
+  gcTime: 60 * 1000,
 });
 
 export const Route = createFileRoute("/")({
@@ -131,7 +132,7 @@ function M3URow({ title, items }: { title: string; items: M3UItem[] }) {
         <h2 className="text-xl sm:text-2xl font-bold tracking-tight">{title}</h2>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        {items.slice(0, 18).map((it, idx) => (
+        {items.slice(0, 48).map((it, idx) => (
           <div key={idx} className="group relative aspect-[2/3] overflow-hidden rounded-xl bg-secondary ring-1 ring-border transition-all hover:ring-primary/60">
             {it.logo ? (
               <img src={it.logo} alt={it.name} className="h-full w-full object-cover" />

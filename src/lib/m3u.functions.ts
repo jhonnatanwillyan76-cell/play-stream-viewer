@@ -20,11 +20,12 @@ function parseM3U(content: string): M3UItem[] {
     line = line.trim();
     if (line.startsWith('#EXTINF:')) {
       const nameMatch = line.match(/,(.+)$/);
-      const logoMatch = line.match(/tvg-logo="([^"]+)"/);
-      const groupMatch = line.match(/group-title="([^"]+)"/);
+      const logoMatch = line.match(/tvg-logo="([^"]+)"/i);
+      const groupMatch = line.match(/group-title="([^"]+)"/i);
+      const tvgNameMatch = line.match(/tvg-name="([^"]+)"/i);
       
       currentItem = {
-        name: nameMatch ? nameMatch[1].trim() : "Sem nome",
+        name: nameMatch ? nameMatch[1].trim() : (tvgNameMatch ? tvgNameMatch[1].trim() : "Sem nome"),
         logo: logoMatch ? logoMatch[1] : undefined,
         group: groupMatch ? groupMatch[1] : undefined,
         type: 'movie'
