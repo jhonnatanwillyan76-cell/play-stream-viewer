@@ -148,6 +148,8 @@ function M3URow({ title, items }: { title: string; items: any[] }) {
         ))}
       </div>
     </section>
+  );
+}
 
 function Footer() {
   return (
