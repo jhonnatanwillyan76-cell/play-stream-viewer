@@ -3,10 +3,6 @@ import { createFileRoute } from '@tanstack/react-router'
 const ALLOWED_HOSTS = ['ph2.lat', 'livecreative.digital', 'cdn.livecreative.digital', 'edge.livecreative.digital', 'streaming.ph2.lat']
 
 async function proxy(request: Request, method: 'GET' | 'HEAD') {
-  console.log(`[PROXY] Request: ${method} ${request.url}`);
-  const rangeHeader = request.headers.get('range');
-  if (rangeHeader) console.log(`[PROXY] Range requested: ${rangeHeader}`);
-
   const url = new URL(request.url)
   const target = url.searchParams.get('url')
   if (!target) return new Response('Missing url', { status: 400 })
@@ -17,9 +13,9 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
   } catch {
     return new Response('Invalid url', { status: 400 })
   }
+
   const isAllowedHost = ALLOWED_HOSTS.some(h => parsed.hostname.endsWith(h));
   if (!isAllowedHost) {
-    // If it's not in the list, but it's a known streaming extension, we might want to allow it
     const isMedia = ['.mp4', '.ts', '.m3u8', '.mkv'].some(ext => parsed.pathname.toLowerCase().endsWith(ext));
     if (!isMedia) {
       return new Response('Host not allowed', { status: 403 })
@@ -40,7 +36,7 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
     const upstream = await fetch(parsed.toString(), { 
       method, 
       headers, 
-      redirect: 'follow',
+      redirect: 'follow'
     })
 
     const outHeaders = new Headers()
@@ -78,19 +74,14 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
         outHeaders.set('content-type', 'application/x-mpegURL');
       }
     }
-    
-    console.log(`[PROXY] Final content-type: ${outHeaders.get('content-type')}`);
-    console.log(`[PROXY] Final status: ${upstream.status}`);
 
-
-    // Return the response with the exact status code from upstream (crucial for 206 Partial Content)
     return new Response(method === 'HEAD' ? null : upstream.body, {
       status: upstream.status,
       headers: outHeaders,
     })
-  } catch (error: any) {
-    console.error('[PROXY] Error:', error.message || error);
-    return new Response('Proxy error: ' + (error.message || 'Unknown'), { status: 502 })
+  } catch (error) {
+    console.error('Proxy fetch error:', error)
+    return new Response('Proxy error', { status: 502 })
   }
 }
 

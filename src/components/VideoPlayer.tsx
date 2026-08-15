@@ -32,7 +32,7 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
         enableWorker: true,
         lowLatencyMode: true,
         backBufferLength: 90,
-        xhrSetup: (xhr, url) => {
+        xhrSetup: (xhr) => {
           xhr.withCredentials = false;
         }
       });
@@ -62,15 +62,6 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
     } else {
       video.src = proxiedSrc;
       video.load();
-      video.muted = true; // Auto-play frequently requires mute
-      
-      // Tentar play imediato
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          console.warn("Autoplay blocked");
-        });
-      }
     }
 
     return () => {
@@ -115,6 +106,7 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
         </div>
       )}
 
+      <video
         ref={videoRef}
         autoPlay
         muted
