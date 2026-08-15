@@ -11,7 +11,7 @@ export interface M3UItem {
 }
 
 const M3U_URL = "http://ph2.lat/get.php?username=334449926&password=427429973&type=m3u_plus&output=ts";
-const CACHE_TTL = 30 * 60 * 1000; 
+const CACHE_TTL = 6 * 60 * 60 * 1000; // Increased to 6 hours for stability 
 
 function slugify(text: string) {
   return text
