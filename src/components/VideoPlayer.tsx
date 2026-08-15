@@ -26,7 +26,7 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
 
     // Usar proxy para contornar problemas de CORS e headers que causam carregamento infinito
     const proxiedSrc = `/api/public/stream?url=${encodeURIComponent(src)}`;
-    const isHls = src.includes(".m3u8");
+    const isHls = src.includes(".m3u8") || src.includes("output=m3u8");
 
     if (isHls && Hls.isSupported()) {
       const hls = new Hls({
@@ -60,11 +60,12 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
           }
         }
       });
-    } else if (video.canPlayType("application/vnd.apple.mpegurl") && isHls) {
-      video.src = proxiedSrc;
     } else {
-      // Para .mp4, .ts (via proxy vira stream de bytes) ou outros
+      // Para .mp4, .ts ou Safari com suporte nativo
       video.src = proxiedSrc;
+      
+      // Tentar forçar o carregamento se estiver preso em zero
+      video.load();
     }
 
     return () => {
