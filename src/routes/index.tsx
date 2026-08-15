@@ -134,22 +134,29 @@ function M3URow({ title, items }: { title: string; items: M3UItem[] }) {
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {items.slice(0, 48).map((it, idx) => (
-          <div key={idx} className="group relative aspect-[2/3] overflow-hidden rounded-xl bg-secondary ring-1 ring-border transition-all hover:ring-primary/60">
+          <Link 
+            key={idx} 
+            to="/title/$type/$slug"
+            params={{ type: it.type === 'movie' ? 'movie' : 'series', slug: it.slug }}
+            className="group relative aspect-[2/3] overflow-hidden rounded-xl bg-secondary ring-1 ring-border transition-all hover:ring-primary/60"
+          >
             {it.logo ? (
               <img src={it.logo} alt={it.name} className="h-full w-full object-cover" />
             ) : (
               <div className="h-full w-full flex flex-col items-center justify-center p-4 text-center bg-gradient-to-br from-secondary to-background">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-primary mb-2">M3U CONTENT</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-primary mb-2">
+                  {it.type === 'movie' ? 'FILME' : 'SÉRIE'}
+                </span>
                 <span className="text-xs font-bold leading-tight line-clamp-3">{it.name}</span>
               </div>
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
               <p className="text-[10px] text-white/70 mb-2 line-clamp-2 font-medium">{it.name}</p>
-              <a href={it.url} target="_blank" rel="noopener noreferrer" className="w-full py-2 bg-primary text-primary-foreground text-center rounded-lg font-bold text-xs uppercase tracking-wider hover:scale-105 transition-transform">
-                ▶ Assistir
-              </a>
+              <div className="w-full py-2 bg-primary text-primary-foreground text-center rounded-lg font-bold text-xs uppercase tracking-wider hover:scale-105 transition-transform">
+                ▶ {it.type === 'movie' ? 'Assistir' : 'Ver Episódios'}
+              </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </section>
