@@ -35,18 +35,18 @@ function parseM3U(content: string): M3UItem[] {
       const name = currentItem.name?.toLowerCase() || "";
       
       // Smart detection for types
-      if (group.includes('serie') || group.includes('episodio') || group.includes('season') || group.includes('temporada') || group.includes('multi')) {
+      const isSeries = group.includes('serie') || group.includes('episodio') || group.includes('season') || group.includes('temporada') || group.includes('multi');
+      const isMovie = group.includes('filme') || group.includes('movie') || group.includes('cinema') || group.includes('vod');
+      
+      if (isSeries) {
         currentItem.type = 'series';
-      } else if (group.includes('filme') || group.includes('movie') || group.includes('cinema') || group.includes('vod')) {
+      } else if (isMovie) {
         currentItem.type = 'movie';
-      } else if (group.includes('canais') || group.includes('ao vivo') || group.includes('live') || group.includes('tv') || group.includes('abertos')) {
-        currentItem.type = 'series'; // We'll treat live TV as 'series' for now or a separate type if needed
-        // But the user wants only movies and series, so we might filter these out in the caller
       }
       
-      // Sometimes type is in the URL (Xtream API structure)
-      if (currentItem.url?.includes('movie')) currentItem.type = 'movie';
-      if (currentItem.url?.includes('series')) currentItem.type = 'series';
+      // Sometimes type is in the URL or tvg-name (Xtream API structure)
+      if (line.includes('movie') || tvgNameMatch?.[1].toLowerCase().includes('movie')) currentItem.type = 'movie';
+      if (line.includes('series') || tvgNameMatch?.[1].toLowerCase().includes('series')) currentItem.type = 'series';
     } else if (line.startsWith('http') && currentItem) {
       currentItem.url = line;
       items.push(currentItem as M3UItem);
