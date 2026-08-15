@@ -123,11 +123,13 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
         playsInline
         crossOrigin="anonymous"
         onLoadedData={(e) => {
-          // Quando os dados começam a chegar, tentamos forçar o início
           const v = e.currentTarget;
-          if (v.paused) {
-            v.play().catch(() => {});
-          }
+          v.play().catch(err => {
+            console.log("Play failed, requesting user interaction:", err);
+          });
+        }}
+        onCanPlay={(e) => {
+          e.currentTarget.play().catch(() => {});
         }}
       >
         Seu navegador não suporta o player de vídeo.
