@@ -9,17 +9,12 @@ export interface M3UItem {
 }
 
 const M3U_URL = "http://ph2.lat/get.php?username=334449926&password=427429973&type=m3u_plus&output=ts";
-const CACHE_KEY = "m3u_catalog_cache";
-const CACHE_TTL = 30 * 60 * 1000; // 30 minutes cache to avoid limit errors
-
+const CACHE_TTL = 30 * 60 * 1000; 
 
 function parseM3U(content: string): M3UItem[] {
   const items: M3UItem[] = [];
   const lines = content.split('\n');
-  
   let currentItem: Partial<M3UItem> | null = null;
-  
-  console.log("Parsing M3U content, lines:", lines.length);
 
   for (let line of lines) {
     line = line.trim();
@@ -42,29 +37,19 @@ function parseM3U(content: string): M3UItem[] {
 
       const group = (currentItem.group || "").toLowerCase();
       const name = (currentItem.name || "").toLowerCase();
-      
-      // Better series detection: check for season/episode markers in name too
       const seriesMarkers = ['serie', 'episodio', 'season', 'temporada', 'multi', 's0', 'e0', 's1', 'e1'];
       const isSeries = seriesMarkers.some(m => group.includes(m) || name.includes(m));
       
-      if (isSeries) {
-        currentItem.type = 'series';
-      } else {
-        currentItem.type = 'movie';
-      }
+      currentItem.type = isSeries ? 'series' : 'movie';
       
-      // Override if specific markers found in line
       if (line.toLowerCase().includes('movie')) currentItem.type = 'movie';
       if (line.toLowerCase().includes('series')) currentItem.type = 'series';
-
     } else if (line.startsWith('http') && currentItem) {
       currentItem.url = line;
       items.push(currentItem as M3UItem);
       currentItem = null;
     }
   }
-  
-  console.log("Parsed total items:", items.length);
   return items;
 }
 
@@ -74,7 +59,6 @@ export const listM3U = createServerFn({ method: "GET" })
   .handler(async () => {
     const url = process.env['M3U_URL'] || M3U_URL;
     
-    // Return from memory cache if valid
     if (memoryCache && (Date.now() - memoryCache.timestamp < CACHE_TTL)) {
       return memoryCache.data;
     }
@@ -83,40 +67,27 @@ export const listM3U = createServerFn({ method: "GET" })
       const res = await fetch(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': '*/*',
-          'Connection': 'keep-alive'
         },
         signal: AbortSignal.timeout(20000)
       });
       
-      if (!res.ok) throw new Error(`Fetch M3U failed: ${res.status}`);
+      if (!res.ok) throw new Error(`Fetch M3U failed`);
       const text = await res.text();
       
       if (text.includes('DOWNLOAD_LIMIT_REACHED')) {
         if (memoryCache) return memoryCache.data;
-        throw new Error('Limite de download simultâneo atingido na lista M3U. Tente novamente em instantes.');
+        throw new Error('LIMIT_REACHED');
       }
       
       const allItems = parseM3U(text);
-      
       const filteredItems = allItems.filter(item => {
         const url = item.url.toLowerCase();
-        const isMovieLink = url.includes('/movie/');
-        const isSeriesLink = url.includes('/series/');
-        const hasVideoExt = url.includes('.mp4') || url.includes('.mkv') || url.includes('.avi');
-        const isLive = url.includes('/live/');
-        if (isLive) return false;
-        return isMovieLink || isSeriesLink || hasVideoExt;
+        return (url.includes('/movie/') || url.includes('/series/') || url.includes('.mp4') || url.includes('.mkv')) && !url.includes('/live/');
       });
 
-      // Update cache
       if (filteredItems.length > 0) {
-        memoryCache = {
-          data: filteredItems,
-          timestamp: Date.now()
-        };
+        memoryCache = { data: filteredItems, timestamp: Date.now() };
       }
-
       return filteredItems;
     } catch (e) {
       if (memoryCache) return memoryCache.data;
