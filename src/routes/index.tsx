@@ -111,14 +111,13 @@ function M3UHero({ item }: { item: M3UItem }) {
             {item.group || "Conteúdo Digital"} · {item.type === "movie" ? "Filme" : "Série"}
           </p>
           <div className="mt-6 flex gap-3">
-            <a
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              to="/title/$type/$slug"
+              params={{ type: item.type === 'movie' ? 'movie' : 'series', slug: item.slug }}
               className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground font-bold px-8 py-3 hover:brightness-110 transition scale-105 active:scale-95"
             >
-              ▶ Assistir agora
-            </a>
+              ▶ {item.type === 'movie' ? 'Assistir agora' : 'Ver episódios'}
+            </Link>
           </div>
         </div>
       </div>
