@@ -119,7 +119,6 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
         poster={poster}
         playsInline
         autoPlay
-        muted
         onCanPlay={(e) => {
           const v = e.currentTarget;
           v.play().catch(() => {
