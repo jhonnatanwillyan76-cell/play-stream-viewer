@@ -9,6 +9,9 @@ export interface M3UItem {
 }
 
 const M3U_URL = "http://ph2.lat/get.php?username=334449926&password=427429973&type=m3u_plus&output=ts";
+const CACHE_KEY = "m3u_catalog_cache";
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutes cache to avoid limit errors
+
 
 function parseM3U(content: string): M3UItem[] {
   const items: M3UItem[] = [];
@@ -65,50 +68,67 @@ function parseM3U(content: string): M3UItem[] {
   return items;
 }
 
+let memoryCache: { data: M3UItem[], timestamp: number } | null = null;
+
 export const listM3U = createServerFn({ method: "GET" })
   .handler(async () => {
     const url = process.env['M3U_URL'] || M3U_URL;
     
+    // Return from memory cache if valid
+    if (memoryCache && (Date.now() - memoryCache.timestamp < CACHE_TTL)) {
+      console.log("Serving M3U from memory cache");
+      return memoryCache.data;
+    }
+
     try {
+      console.log("Fetching M3U from provider...");
       const res = await fetch(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'Accept': '*/*',
           'Connection': 'keep-alive'
-        }
+        },
+        signal: AbortSignal.timeout(15000)
       });
+      
       if (!res.ok) throw new Error(`Fetch M3U failed: ${res.status}`);
       const text = await res.text();
       
       if (text.includes('DOWNLOAD_LIMIT_REACHED')) {
+        if (memoryCache) {
+          console.warn("Limit reached, serving stale cache");
+          return memoryCache.data;
+        }
         throw new Error('Limite de download simultâneo atingido na lista M3U. Tente novamente em instantes.');
       }
       
       const allItems = parseM3U(text);
       
-      // Filter to only include movies and series, excluding live TV channels if any
-      // Usually M3U lists from providers have specific group names for VOD
-      return allItems.filter(item => {
+      const filteredItems = allItems.filter(item => {
         const url = item.url.toLowerCase();
-        
-        // XTREAM API and standard M3U links for VOD
-        // Channels usually look like: /live/user/pass/ID.ts
-        // Movies usually look like: /movie/user/pass/ID.mp4
-        // Series usually look like: /series/user/pass/ID.mp4
-        
         const isMovieLink = url.includes('/movie/');
         const isSeriesLink = url.includes('/series/');
         const hasVideoExt = url.includes('.mp4') || url.includes('.mkv') || url.includes('.avi');
         const isLive = url.includes('/live/');
-        
-        // If it explicitly says live, it's a channel
         if (isLive) return false;
-        
-        // If it's a direct movie/series path or has video extension, it's VOD
         return isMovieLink || isSeriesLink || hasVideoExt;
       });
+
+      // Update cache
+      if (filteredItems.length > 0) {
+        memoryCache = {
+          data: filteredItems,
+          timestamp: Date.now()
+        };
+      }
+
+      return filteredItems;
     } catch (e) {
       console.error("Failed to fetch M3U:", e);
+      if (memoryCache) {
+        console.warn("Fetch failed, serving stale cache");
+        return memoryCache.data;
+      }
       return [];
     }
   });
