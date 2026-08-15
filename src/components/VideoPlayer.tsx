@@ -64,8 +64,15 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
       // Para .mp4, .ts ou Safari com suporte nativo
       video.src = proxiedSrc;
       
-      // Tentar forçar o carregamento se estiver preso em zero
+      // Forçar carregamento e tentar reprodução
       video.load();
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Autoplay bloqueado pelo navegador
+          console.log("Autoplay blocked");
+        });
+      }
     }
 
     return () => {
