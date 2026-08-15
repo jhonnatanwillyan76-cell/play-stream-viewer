@@ -123,9 +123,7 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
         onCanPlay={(e) => {
           const v = e.currentTarget;
           v.play().catch(() => {
-            console.log("Autoplay blocked, waiting for interaction");
-            v.muted = true;
-            v.play();
+            console.log("Autoplay blocked, user interaction required");
           });
         }}
       >
