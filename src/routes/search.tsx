@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { listM3U, type M3UItem } from "@/lib/m3u.functions";
 import { SiteHeader } from "@/components/SiteHeader";
+import { GlobalLoadingIndicator } from "@/components/GlobalLoadingIndicator";
 
 const searchSchema = z.object({ q: z.string().catch("").default("") });
 
@@ -31,6 +32,7 @@ export const Route = createFileRoute("/search")({
   loaderDeps: ({ search }) => ({ q: search.q }),
   loader: ({ context, deps }) =>
     context.queryClient.ensureQueryData(searchQuery(deps.q)),
+  pendingComponent: () => <GlobalLoadingIndicator />,
   head: () => ({
     meta: [
       {
