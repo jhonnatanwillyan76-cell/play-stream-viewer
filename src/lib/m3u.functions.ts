@@ -76,29 +76,24 @@ export const listM3U = createServerFn({ method: "GET" })
     
     // Return from memory cache if valid
     if (memoryCache && (Date.now() - memoryCache.timestamp < CACHE_TTL)) {
-      console.log("Serving M3U from memory cache");
       return memoryCache.data;
     }
 
     try {
-      console.log("Fetching M3U from provider...");
       const res = await fetch(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'Accept': '*/*',
           'Connection': 'keep-alive'
         },
-        signal: AbortSignal.timeout(15000)
+        signal: AbortSignal.timeout(20000)
       });
       
       if (!res.ok) throw new Error(`Fetch M3U failed: ${res.status}`);
       const text = await res.text();
       
       if (text.includes('DOWNLOAD_LIMIT_REACHED')) {
-        if (memoryCache) {
-          console.warn("Limit reached, serving stale cache");
-          return memoryCache.data;
-        }
+        if (memoryCache) return memoryCache.data;
         throw new Error('Limite de download simultâneo atingido na lista M3U. Tente novamente em instantes.');
       }
       
@@ -124,11 +119,7 @@ export const listM3U = createServerFn({ method: "GET" })
 
       return filteredItems;
     } catch (e) {
-      console.error("Failed to fetch M3U:", e);
-      if (memoryCache) {
-        console.warn("Fetch failed, serving stale cache");
-        return memoryCache.data;
-      }
+      if (memoryCache) return memoryCache.data;
       return [];
     }
   });
