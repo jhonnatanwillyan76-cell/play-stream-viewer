@@ -171,6 +171,20 @@ export function VideoPlayer({ src, poster, branding, onFullScreen }: VideoPlayer
         </div>
       )}
 
+      {/* Custom Fullscreen button within the video area */}
+      <div className="absolute bottom-16 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onFullScreen) onFullScreen();
+          }}
+          className="p-3 bg-black/60 hover:bg-black/80 text-white rounded-full backdrop-blur-md border border-white/20 transition-all shadow-xl"
+          title="Tela Cheia"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+        </button>
+      </div>
+
       {branding && (
         <div className="absolute top-4 right-4 pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity">
           <span className="text-primary font-black title-cinematic text-xl italic tracking-tighter">
