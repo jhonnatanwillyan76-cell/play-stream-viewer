@@ -24,9 +24,11 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
       hlsRef.current = null;
     }
 
-    // Usar proxy para contornar problemas de CORS e headers que causam carregamento infinito
+    // Proxy para contornar CORS e cabeçalhos
     const proxiedSrc = `/api/public/stream?url=${encodeURIComponent(src)}`;
     const isHls = src.includes(".m3u8") || src.includes("output=m3u8");
+
+    console.log("Loading video:", { src, proxiedSrc, isHls });
 
     if (isHls && Hls.isSupported()) {
       const hls = new Hls({
@@ -61,16 +63,15 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
         }
       });
     } else {
-      // Para .mp4, .ts ou Safari com suporte nativo
+      // Fallback para .mp4 ou .ts via proxy
+      // Importante: definir src ANTES de carregar
       video.src = proxiedSrc;
-      
-      // Forçar carregamento e tentar reprodução
       video.load();
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          // Autoplay bloqueado pelo navegador
-          console.log("Autoplay blocked");
+      
+      const playAttempt = video.play();
+      if (playAttempt !== undefined) {
+        playAttempt.catch(err => {
+          console.warn("Autoplay was prevented, waiting for interaction.", err);
         });
       }
     }
@@ -78,6 +79,10 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
     return () => {
       if (hlsRef.current) {
         hlsRef.current.destroy();
+      }
+      if (video) {
+        video.src = "";
+        video.load();
       }
     };
   }, [src]);
@@ -118,13 +123,7 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
         className="w-full h-full"
         poster={poster}
         playsInline
-        autoPlay
-        onCanPlay={(e) => {
-          const v = e.currentTarget;
-          v.play().catch(() => {
-            console.log("Autoplay blocked, user interaction required");
-          });
-        }}
+        crossOrigin="anonymous"
       >
         Seu navegador não suporta o player de vídeo.
       </video>
