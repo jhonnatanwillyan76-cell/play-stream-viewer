@@ -42,7 +42,9 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
       'content-length', 
       'content-range', 
       'accept-ranges', 
-      'cache-control'
+      'cache-control',
+      'last-modified',
+      'etag'
     ]
 
     for (const key of headersToCopy) {
