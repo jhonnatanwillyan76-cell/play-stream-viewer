@@ -129,21 +129,30 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
       <video
         ref={videoRef}
         autoPlay
-        muted
         playsInline
         controls
         className="w-full h-full cursor-pointer"
         poster={poster}
         crossOrigin="anonymous"
         onClick={togglePlay}
-        onLoadedData={(e) => {
+        onLoadedMetadata={(e) => {
+          // Attempting a small jump can sometimes kickstart stalled streams
           const v = e.currentTarget;
-          v.play().catch(err => {
-            console.log("Play failed, requesting user interaction:", err);
-          });
+          if (v.currentTime === 0) {
+            v.play().catch(() => {
+              // If initial play fails (likely auto-play block), stay on poster/overlay
+            });
+          }
         }}
-        onCanPlay={(e) => {
-          e.currentTarget.play().catch(() => {});
+        onError={(e) => {
+          const v = e.currentTarget;
+          if (v.error) {
+            console.error("Video error:", v.error.code, v.error.message);
+            // Don't show error immediately, try to recover
+            if (v.error.code === 4) {
+              setError("O formato do vídeo não é suportado pelo seu navegador.");
+            }
+          }
         }}
       >
         Seu navegador não suporta o player de vídeo.
