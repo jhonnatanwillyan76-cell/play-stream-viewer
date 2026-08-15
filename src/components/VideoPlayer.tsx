@@ -17,25 +17,28 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
     const video = videoRef.current;
     if (!video) return;
 
-    // Reset state
     setError(null);
 
-    // Clean up previous HLS instance
     if (hlsRef.current) {
       hlsRef.current.destroy();
       hlsRef.current = null;
     }
 
-    const isHls = src.includes(".m3u8") || src.includes(".ts") || src.includes("output=ts");
+    // Usar proxy para contornar problemas de CORS e headers que causam carregamento infinito
+    const proxiedSrc = `/api/public/stream?url=${encodeURIComponent(src)}`;
+    const isHls = src.includes(".m3u8");
 
     if (isHls && Hls.isSupported()) {
       const hls = new Hls({
         enableWorker: true,
         lowLatencyMode: true,
         backBufferLength: 90,
+        xhrSetup: (xhr) => {
+          xhr.withCredentials = false;
+        }
       });
 
-      hls.loadSource(src);
+      hls.loadSource(proxiedSrc);
       hls.attachMedia(video);
       hlsRef.current = hls;
 
@@ -43,26 +46,25 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
         if (data.fatal) {
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
-              setError("Erro de rede ao carregar o vídeo.");
+              setError("Erro de rede. O servidor pode estar offline.");
               hls.startLoad();
               break;
             case Hls.ErrorTypes.MEDIA_ERROR:
-              setError("Erro de mídia ao processar o vídeo.");
+              setError("Erro de mídia. O formato pode ser incompatível.");
               hls.recoverMediaError();
               break;
             default:
-              setError("Erro fatal no player de vídeo.");
+              setError("Erro no reprodutor de vídeo.");
               hls.destroy();
               break;
           }
         }
       });
-    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      // Native HLS support (Safari)
-      video.src = src;
+    } else if (video.canPlayType("application/vnd.apple.mpegurl") && isHls) {
+      video.src = proxiedSrc;
     } else {
-      // Fallback for mp4/mkv or if HLS is not supported
-      video.src = src;
+      // Para .mp4, .ts (via proxy vira stream de bytes) ou outros
+      video.src = proxiedSrc;
     }
 
     return () => {
@@ -108,6 +110,7 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
         className="w-full h-full"
         poster={poster}
         playsInline
+        autoPlay
       >
         Seu navegador não suporta o player de vídeo.
       </video>
