@@ -26,7 +26,7 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
 
     // Usar proxy para contornar problemas de CORS e headers que causam carregamento infinito
     const proxiedSrc = `/api/public/stream?url=${encodeURIComponent(src)}`;
-    const isHls = src.includes(".m3u8");
+    const isHls = src.includes(".m3u8") || src.includes("output=m3u8");
 
     if (isHls && Hls.isSupported()) {
       const hls = new Hls({
