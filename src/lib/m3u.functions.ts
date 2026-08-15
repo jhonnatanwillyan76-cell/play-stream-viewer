@@ -134,6 +134,16 @@ export const listM3U = createServerFn({ method: "GET" })
         return (url.includes('/movie/') || url.includes('/series/') || url.includes('.mp4') || url.includes('.mkv')) && !url.includes('/live/');
       });
 
+      // Sort episodes for series
+      filteredItems.forEach(item => {
+        if (item.type === 'series' && item.episodes) {
+          item.episodes.sort((a, b) => {
+            // Natural sort attempt
+            return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+          });
+        }
+      });
+
       if (filteredItems.length > 0) {
         memoryCache = { data: filteredItems, timestamp: Date.now() };
       }
