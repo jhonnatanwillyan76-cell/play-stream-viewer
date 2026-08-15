@@ -12,12 +12,14 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     setError(null);
+    setIsPlaying(false);
 
     if (hlsRef.current) {
       hlsRef.current.destroy();
@@ -32,7 +34,7 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
         enableWorker: true,
         lowLatencyMode: true,
         backBufferLength: 90,
-        xhrSetup: (xhr, url) => {
+        xhrSetup: (xhr) => {
           xhr.withCredentials = false;
         }
       });
@@ -62,18 +64,17 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
     } else {
       video.src = proxiedSrc;
       video.load();
-      video.muted = true; // Auto-play frequently requires mute
-      
-      // Tentar play imediato
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          console.warn("Autoplay blocked");
-        });
-      }
     }
 
+    const playHandler = () => setIsPlaying(true);
+    const pauseHandler = () => setIsPlaying(false);
+
+    video.addEventListener('play', playHandler);
+    video.addEventListener('pause', pauseHandler);
+
     return () => {
+      video.removeEventListener('play', playHandler);
+      video.removeEventListener('pause', pauseHandler);
       if (hlsRef.current) {
         hlsRef.current.destroy();
       }
@@ -84,6 +85,16 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
       }
     };
   }, [src]);
+
+  const togglePlay = () => {
+    if (videoRef.current) {
+      if (videoRef.current.paused) {
+        videoRef.current.play().catch(() => {});
+      } else {
+        videoRef.current.pause();
+      }
+    }
+  };
 
   return (
     <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-black ring-1 ring-border shadow-2xl group">
@@ -118,11 +129,13 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
       <video
         ref={videoRef}
         autoPlay
+        muted
         playsInline
         controls
-        className="w-full h-full"
+        className="w-full h-full cursor-pointer"
         poster={poster}
         crossOrigin="anonymous"
+        onClick={togglePlay}
         onLoadedData={(e) => {
           const v = e.currentTarget;
           v.play().catch(err => {
@@ -135,6 +148,19 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
       >
         Seu navegador não suporta o player de vídeo.
       </video>
+
+      {!isPlaying && !error && (
+        <div 
+          className="absolute inset-0 flex items-center justify-center bg-black/40 cursor-pointer"
+          onClick={togglePlay}
+        >
+          <button 
+            className="w-20 h-20 rounded-full bg-primary/90 flex items-center justify-center text-white hover:scale-110 transition-transform shadow-2xl"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </button>
+        </div>
+      )}
 
       {branding && (
         <div className="absolute top-4 right-4 pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity">

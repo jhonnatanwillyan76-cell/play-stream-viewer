@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-const ALLOWED_HOSTS = ['ph2.lat']
+const ALLOWED_HOSTS = ['ph2.lat', 'livecreative.digital', 'cdn.livecreative.digital', 'edge.livecreative.digital', 'streaming.ph2.lat', 'livecreative.net', 'livecreative.site']
 
 async function proxy(request: Request, method: 'GET' | 'HEAD') {
   const url = new URL(request.url)
@@ -13,8 +13,13 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
   } catch {
     return new Response('Invalid url', { status: 400 })
   }
-  if (!ALLOWED_HOSTS.includes(parsed.hostname)) {
-    return new Response('Host not allowed', { status: 403 })
+
+  const isAllowedHost = ALLOWED_HOSTS.some(h => parsed.hostname.endsWith(h));
+  if (!isAllowedHost) {
+    const isMedia = ['.mp4', '.ts', '.m3u8', '.mkv'].some(ext => parsed.pathname.toLowerCase().endsWith(ext));
+    if (!isMedia) {
+      return new Response('Host not allowed', { status: 403 })
+    }
   }
 
   const headers: Record<string, string> = {
@@ -31,10 +36,8 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
     const upstream = await fetch(parsed.toString(), { 
       method, 
       headers, 
-      redirect: 'follow',
-      // Cloudflare worker specific: bypass cache to ensure range requests work correctly
-      cf: { cacheEverything: false } 
-    } as any)
+      redirect: 'follow'
+    })
 
     const outHeaders = new Headers()
     
@@ -61,13 +64,17 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
     outHeaders.set('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges')
     
     // Explicitly set content-type if missing or incorrect for common formats
-    if (parsed.pathname.endsWith('.ts')) {
-      outHeaders.set('content-type', 'video/mp2t')
-    } else if (parsed.pathname.endsWith('.mp4')) {
-      outHeaders.set('content-type', 'video/mp4')
+    const contentType = outHeaders.get('content-type');
+    if (!contentType || contentType === 'text/plain') {
+      if (parsed.pathname.endsWith('.ts')) {
+        outHeaders.set('content-type', 'video/mp2t');
+      } else if (parsed.pathname.endsWith('.mp4')) {
+        outHeaders.set('content-type', 'video/mp4');
+      } else if (parsed.pathname.endsWith('.m3u8')) {
+        outHeaders.set('content-type', 'application/x-mpegURL');
+      }
     }
 
-    // Return the response with the exact status code from upstream (crucial for 206 Partial Content)
     return new Response(method === 'HEAD' ? null : upstream.body, {
       status: upstream.status,
       headers: outHeaders,
