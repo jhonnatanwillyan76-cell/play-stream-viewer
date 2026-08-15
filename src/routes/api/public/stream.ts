@@ -1,6 +1,18 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-const ALLOWED_HOSTS = ['ph2.lat', 'livecreative.digital', 'cdn.livecreative.digital', 'edge.livecreative.digital', 'streaming.ph2.lat', 'livecreative.net', 'livecreative.site', '103.140.155.12']
+const ALLOWED_HOSTS = [
+  'ph2.lat', 
+  'livecreative.digital', 
+  'cdn.livecreative.digital', 
+  'edge.livecreative.digital', 
+  'streaming.ph2.lat', 
+  'livecreative.net', 
+  'livecreative.site', 
+  '103.140.155.12',
+  'opalivevodsexclusive.click',
+  'livevods.xyz',
+  'vodsexclusive.online'
+]
 
 async function proxy(request: Request, method: 'GET' | 'HEAD') {
   const url = new URL(request.url)
@@ -14,6 +26,7 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
     return new Response('Invalid url', { status: 400 })
   }
 
+  // Security check: allow known hosts or common media extensions
   const isAllowedHost = ALLOWED_HOSTS.some(h => parsed.hostname.endsWith(h));
   if (!isAllowedHost) {
     const isMedia = ['.mp4', '.ts', '.m3u8', '.mkv'].some(ext => parsed.pathname.toLowerCase().endsWith(ext));
@@ -22,13 +35,14 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
     }
   }
 
+  // Use a User-Agent that commonly bypasses some simple anti-bot/bot-check mechanisms for streaming
   const headers: Record<string, string> = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'User-Agent': 'VLC/3.0.18 LibVLC/3.0.18',
     'Accept': '*/*',
-    'Referer': 'http://ph2.lat/',
-    'Origin': 'http://ph2.lat',
+    'Connection': 'keep-alive',
   }
 
+  // Pass through Range header for seeking/partial content
   const range = request.headers.get('range')
   if (range) headers['Range'] = range
 
@@ -36,9 +50,8 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
     const upstream = await fetch(parsed.toString(), { 
       method, 
       headers, 
-      redirect: 'follow',
-      // @ts-ignore - Cloudflare Workers specific property
-      cf: { cacheEverything: false }
+      redirect: 'follow'
+
     })
 
     const outHeaders = new Headers()
@@ -51,7 +64,8 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
       'accept-ranges', 
       'cache-control',
       'last-modified',
-      'etag'
+      'etag',
+      'vary'
     ]
 
     for (const key of headersToCopy) {
@@ -59,15 +73,15 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
       if (value) outHeaders.set(key, value)
     }
 
-    // Ensure CORS
+    // Ensure CORS for the browser to allow the video element to read the stream
     outHeaders.set('Access-Control-Allow-Origin', '*')
     outHeaders.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
     outHeaders.set('Access-Control-Allow-Headers', '*')
-    outHeaders.set('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges')
+    outHeaders.set('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges, ETag, Last-Modified')
     
-    // Explicitly set content-type if missing or incorrect for common formats
+    // Fallback content-types
     const contentType = outHeaders.get('content-type');
-    if (!contentType || contentType === 'text/plain') {
+    if (!contentType || contentType === 'text/plain' || contentType === 'text/html') {
       if (parsed.pathname.endsWith('.ts')) {
         outHeaders.set('content-type', 'video/mp2t');
       } else if (parsed.pathname.endsWith('.mp4')) {
@@ -77,6 +91,7 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
       }
     }
 
+    // Return the response, streaming the body if it's a GET request
     return new Response(method === 'HEAD' ? null : upstream.body, {
       status: upstream.status,
       headers: outHeaders,
