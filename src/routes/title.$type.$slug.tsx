@@ -9,8 +9,10 @@ const titleQuery = (slug: string) =>
     queryKey: ["title", slug],
     queryFn: async () => {
       const all = await listM3U();
-      const item = all.find((it: M3UItem) => it.slug === slug);
-      if (!item) throw new Error("Conteúdo não encontrado");
+      const item =
+        all.find((it: M3UItem) => it.slug === slug) ??
+        all.find((it: M3UItem) => it.slug.startsWith(slug) || slug.startsWith(it.slug)) ??
+        null;
       return item;
     },
     staleTime: 60 * 60 * 1000,
@@ -26,9 +28,29 @@ function TitlePage() {
   const { slug, type } = Route.useParams();
   const { data: item } = useSuspenseQuery(titleQuery(slug));
   const [selectedEpisode, setSelectedEpisode] = useState<{ name: string; url: string } | null>(
-    item.type === "movie" ? { name: item.name, url: item.url } : null
+    item && item.type === "movie" ? { name: item.name, url: item.url } : null
   );
   const playerRef = useRef<HTMLDivElement>(null);
+
+  if (!item) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <SiteHeader />
+        <main className="mx-auto max-w-3xl px-4 py-24 text-center space-y-4">
+          <h1 className="text-3xl font-black title-cinematic">Conteúdo indisponível</h1>
+          <p className="text-muted-foreground">
+            Este título não está mais na lista atual ou o catálogo ainda está carregando.
+          </p>
+          <Link
+            to="/"
+            className="inline-block mt-4 px-8 py-3 bg-primary text-primary-foreground rounded-full font-bold"
+          >
+            Voltar ao início
+          </Link>
+        </main>
+      </div>
+    );
+  }
 
   const handleFullScreen = () => {
     if (playerRef.current) {
