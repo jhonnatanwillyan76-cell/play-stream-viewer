@@ -130,18 +130,20 @@ function M3URow({ title, items }: { title: string; items: any[] }) {
         <h2 className="text-xl sm:text-2xl font-bold tracking-tight">{title}</h2>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        {items.slice(0, 12).map((it, idx) => (
+        {items.slice(0, 18).map((it, idx) => (
           <div key={idx} className="group relative aspect-[2/3] overflow-hidden rounded-xl bg-secondary ring-1 ring-border transition-all hover:ring-primary/60">
             {it.logo ? (
               <img src={it.logo} alt={it.name} className="h-full w-full object-cover" />
             ) : (
-              <div className="h-full w-full flex items-center justify-center p-4 text-center text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                {it.name}
+              <div className="h-full w-full flex flex-col items-center justify-center p-4 text-center bg-gradient-to-br from-secondary to-background">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-primary mb-2">M3U CONTENT</span>
+                <span className="text-xs font-bold leading-tight line-clamp-3">{it.name}</span>
               </div>
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-              <a href={it.url} target="_blank" rel="noopener noreferrer" className="w-full py-2 bg-primary text-primary-foreground text-center rounded-lg font-bold text-xs uppercase tracking-wider">
-                Assistir
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+              <p className="text-[10px] text-white/70 mb-2 line-clamp-2 font-medium">{it.name}</p>
+              <a href={it.url} target="_blank" rel="noopener noreferrer" className="w-full py-2 bg-primary text-primary-foreground text-center rounded-lg font-bold text-xs uppercase tracking-wider hover:scale-105 transition-transform">
+                ▶ Assistir
               </a>
             </div>
           </div>
@@ -154,7 +156,7 @@ function M3URow({ title, items }: { title: string; items: any[] }) {
 function Footer() {
   return (
     <footer className="mt-16 border-t border-border py-8 text-center text-xs text-muted-foreground">
-      Conteúdo e player fornecidos por bludvplay.online
+      Maré TV · Conteúdo M3U e Catálogo Digital
     </footer>
   );
 }
