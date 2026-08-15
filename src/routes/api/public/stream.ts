@@ -17,8 +17,13 @@ async function proxy(request: Request, method: 'GET' | 'HEAD') {
   } catch {
     return new Response('Invalid url', { status: 400 })
   }
-  if (!ALLOWED_HOSTS.includes(parsed.hostname)) {
-    return new Response('Host not allowed', { status: 403 })
+  const isAllowedHost = ALLOWED_HOSTS.some(h => parsed.hostname.endsWith(h));
+  if (!isAllowedHost) {
+    // If it's not in the list, but it's a known streaming extension, we might want to allow it
+    const isMedia = ['.mp4', '.ts', '.m3u8', '.mkv'].some(ext => parsed.pathname.toLowerCase().endsWith(ext));
+    if (!isMedia) {
+      return new Response('Host not allowed', { status: 403 })
+    }
   }
 
   const headers: Record<string, string> = {
