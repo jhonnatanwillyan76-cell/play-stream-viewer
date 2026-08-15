@@ -122,7 +122,6 @@ export function VideoPlayer({ src, poster, branding }: VideoPlayerProps) {
         controls
         className="w-full h-full"
         poster={poster}
-        playsInline
         crossOrigin="anonymous"
         onLoadedData={(e) => {
           const v = e.currentTarget;
