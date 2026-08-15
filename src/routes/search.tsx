@@ -16,7 +16,7 @@ const searchQuery = (q: string) =>
       const lower = q.toLowerCase();
       
       // Filter the already parsed M3U items based on the search term
-      return items.filter(it => 
+      return items.filter((it: M3UItem) => 
         it.name.toLowerCase().includes(lower) || 
         it.group?.toLowerCase().includes(lower) ||
         it.url.toLowerCase().includes(lower)
